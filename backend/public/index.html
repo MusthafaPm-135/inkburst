@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INKBURST — Digital Comics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Work+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#18140f;
+    --ink-soft:#2b2419;
+    --paper:#e7e0c9;
+    --paper-dim:#dcd3b7;
+    --red:#d3283c;
+    --blue:#204e8f;
+    --yellow:#eeb023;
+    --cyan:#2f9aab;
+    --violet:#6b3f93;
+    --shadow: 6px 6px 0 var(--ink);
+    --shadow-sm: 3px 3px 0 var(--ink);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    background-image:
+      radial-gradient(circle, rgba(24,20,15,0.07) 1px, transparent 1.2px);
+    background-size: 14px 14px;
+  }
+  h1,h2,h3, .display{
+    font-family:'Bangers', cursive;
+    letter-spacing: 0.5px;
+    line-height:1;
+  }
+  .mono{ font-family:'Space Mono', monospace; }
+  a{ color:inherit; }
+  button{ font-family:inherit; cursor:pointer; }
+  :focus-visible{ outline: 3px solid var(--blue); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation: none !important; transition: none !important; }
+  }
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position:sticky; top:0; z-index:40;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 14px 28px;
+    background:var(--paper);
+    border-bottom: 3px solid var(--ink);
+  }
+  .logo{
+    font-size: 32px;
+    display:flex; align-items:center; gap:8px;
+    text-decoration:none;
+  }
+  .logo .dot{
+    width:12px;height:12px;background:var(--red);border-radius:50%;
+    display:inline-block; border:2px solid var(--ink);
+  }
+  .nav-links{ display:flex; gap: 26px; align-items:center; }
+  .nav-links a{
+    text-decoration:none; font-weight:700; font-size:14px;
+    text-transform:uppercase; letter-spacing:0.06em;
+    border-bottom: 3px solid transparent;
+    padding-bottom:3px;
+  }
+  .nav-links a:hover{ border-color: var(--red); }
+  .cart-btn{
+    position:relative; background:var(--ink); color:var(--paper);
+    border:3px solid var(--ink); border-radius:999px;
+    padding:9px 18px; font-weight:700; font-size:13px;
+    text-transform:uppercase; letter-spacing:0.05em;
+    display:flex; align-items:center; gap:8px;
+  }
+  .cart-btn:hover{ background:var(--red); border-color:var(--ink); }
+  .cart-count{
+    background:var(--yellow); color:var(--ink);
+    border-radius:50%; width:22px; height:22px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; border:2px solid var(--ink);
+  }
+  .cart-count.bump{ animation: bump 0.35s ease; }
+  @keyframes bump{ 0%{transform:scale(1)} 40%{transform:scale(1.5)} 100%{transform:scale(1)} }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    margin: 24px 28px;
+    padding: 70px 40px 90px;
+    border: 4px solid var(--ink);
+    box-shadow: var(--shadow);
+    background:
+      radial-gradient(circle, rgba(24,20,15,0.16) 1.6px, transparent 1.8px) 0 0/16px 16px,
+      linear-gradient(135deg, var(--yellow) 0%, var(--red) 55%, var(--violet) 100%);
+    overflow:hidden;
+  }
+  .hero-eyebrow{
+    display:inline-block;
+    background:var(--ink); color:var(--paper);
+    font-family:'Space Mono',monospace; font-size:12px; font-weight:700;
+    letter-spacing:0.15em; text-transform:uppercase;
+    padding:6px 12px; margin-bottom:18px;
+    transform: rotate(-2deg);
+  }
+  .hero h1{
+    font-size: clamp(48px, 9vw, 108px);
+    color: var(--paper);
+    -webkit-text-stroke: 2px var(--ink);
+    text-shadow: 4px 4px 0 var(--ink);
+    max-width: 780px;
+    margin:0;
+  }
+  .hero p{
+    max-width:520px; font-size:18px; font-weight:600;
+    margin: 22px 0 30px;
+    background: var(--paper);
+    border:3px solid var(--ink);
+    padding:14px 18px;
+    box-shadow: var(--shadow-sm);
+  }
+  .hero-actions{ display:flex; gap:16px; flex-wrap:wrap; }
+  .btn-primary{
+    background:var(--ink); color:var(--paper);
+    border:3px solid var(--ink);
+    padding:14px 26px; font-weight:800; font-size:15px;
+    text-transform:uppercase; letter-spacing:0.05em;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-primary:hover{ transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--ink); }
+  .btn-ghost{
+    background:var(--paper); color:var(--ink);
+    border:3px solid var(--ink);
+    padding:14px 26px; font-weight:800; font-size:15px;
+    text-transform:uppercase; letter-spacing:0.05em;
+  }
+  .btn-ghost:hover{ background:var(--ink); color:var(--paper); }
+
+  .burst{
+    position:absolute; top: 36px; right: 40px;
+    width:150px; height:150px;
+    background:var(--paper);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    border: 3px solid var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    text-align:center;
+    transform: rotate(8deg);
+  }
+  .burst span{
+    font-family:'Bangers',cursive; font-size:22px; line-height:1;
+    transform: rotate(-8deg);
+  }
+
+  /* ---------- SECTION HEADERS ---------- */
+  .section{ padding: 10px 28px 60px; max-width:1280px; margin:0 auto; }
+  .section-head{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    flex-wrap:wrap; gap:16px;
+    margin: 46px 0 26px;
+    border-bottom: 4px solid var(--ink);
+    padding-bottom: 10px;
+  }
+  .section-head h2{ font-size: 42px; margin:0; }
+  .filters{ display:flex; gap:10px; flex-wrap:wrap; }
+  .chip{
+    background:var(--paper); border:2.5px solid var(--ink);
+    padding:7px 16px; font-weight:700; font-size:13px;
+    text-transform:uppercase; letter-spacing:0.04em;
+    border-radius:999px;
+  }
+  .chip.active{ background:var(--ink); color:var(--paper); }
+  .chip:hover{ background:var(--yellow); }
+
+  /* ---------- GRID / CARDS ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 26px;
+  }
+  .card{
+    background:var(--paper);
+    border: 3px solid var(--ink);
+    box-shadow: var(--shadow-sm);
+    display:flex; flex-direction:column;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover{ transform: translate(-3px,-3px) rotate(-0.6deg); box-shadow: 7px 7px 0 var(--ink); }
+  .cover{
+    position:relative; aspect-ratio: 3/4; border-bottom:3px solid var(--ink);
+    display:flex; align-items:flex-end;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.35) 1.4px, transparent 1.6px);
+    background-size: 10px 10px;
+    overflow:hidden;
+  }
+  .cover .emblem{ position:absolute; opacity:0.9; }
+  .cover .cover-title{
+    position:relative; z-index:2;
+    font-family:'Bangers',cursive; font-size:26px; color:var(--paper);
+    -webkit-text-stroke: 1.4px var(--ink);
+    padding: 10px 12px; line-height:1.05;
+  }
+  .card-body{ padding:14px 16px 16px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .card-genre{
+    font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase;
+    letter-spacing:0.08em; font-weight:700; color: var(--ink-soft);
+  }
+  .card-title{ font-size:20px; margin:0; }
+  .card-author{ font-size:13px; font-weight:600; opacity:0.75; margin:-4px 0 4px; }
+  .card-desc{ font-size:13.5px; line-height:1.4; flex:1; }
+  .card-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
+  .price{
+    font-family:'Space Mono',monospace; font-weight:700; font-size:15px;
+    background:var(--yellow); border:2px solid var(--ink);
+    padding:4px 9px; transform: rotate(-2deg); display:inline-block;
+  }
+  .add-btn{
+    background:var(--ink); color:var(--paper); border:2.5px solid var(--ink);
+    padding:8px 14px; font-weight:800; font-size:12.5px;
+    text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .add-btn:hover{ background:var(--red); }
+
+  /* genre color variants for covers */
+  .g-blue{ background: linear-gradient(160deg, var(--blue), #0f2b57); }
+  .g-red{ background: linear-gradient(160deg, var(--red), #7c1522); }
+  .g-yellow{ background: linear-gradient(160deg, var(--yellow), #a9700a); }
+  .g-cyan{ background: linear-gradient(160deg, var(--cyan), #145762); }
+  .g-violet{ background: linear-gradient(160deg, var(--violet), #391f57); }
+  .g-ink{ background: linear-gradient(160deg, #4b463c, var(--ink)); }
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; }
+  .step{
+    background:var(--paper); border:3px solid var(--ink); box-shadow:var(--shadow-sm);
+    padding:20px;
+  }
+  .step .num{
+    font-family:'Bangers',cursive; font-size:34px; color:var(--red);
+    -webkit-text-stroke: 1px var(--ink);
+  }
+  .step h3{ font-size:22px; margin:8px 0 6px; }
+  .step p{ font-size:14px; margin:0; opacity:0.85; }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    border-top:4px solid var(--ink);
+    padding: 34px 28px; margin-top:40px;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px;
+    font-size:13px;
+  }
+  footer .logo{ font-size:24px; }
+
+  /* ---------- CART DRAWER ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(24,20,15,0.55);
+    z-index:60; opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  .overlay.show{ opacity:1; pointer-events:auto; }
+  .drawer{
+    position:fixed; top:0; right:0; height:100%; width:min(400px, 92vw);
+    background:var(--paper); border-left:4px solid var(--ink);
+    z-index:70; transform:translateX(100%); transition:transform .25s ease;
+    display:flex; flex-direction:column;
+  }
+  .drawer.show{ transform:translateX(0); }
+  .drawer-head{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:18px 20px; border-bottom:3px solid var(--ink);
+  }
+  .drawer-head h2{ font-size:28px; margin:0; }
+  .icon-btn{
+    background:none; border:2.5px solid var(--ink); border-radius:50%;
+    width:34px; height:34px; font-size:16px; font-weight:800;
+  }
+  .icon-btn:hover{ background:var(--ink); color:var(--paper); }
+  .drawer-items{ flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:14px; }
+  .cart-empty{ text-align:center; opacity:0.7; margin-top:40px; font-size:14px; }
+  .cart-item{ display:flex; gap:12px; border-bottom:2px dashed var(--ink); padding-bottom:12px; }
+  .cart-item .mini-cover{
+    width:52px; height:68px; flex-shrink:0; border:2px solid var(--ink);
+  }
+  .cart-item-info{ flex:1; }
+  .cart-item-info .t{ font-weight:700; font-size:14px; }
+  .cart-item-info .g{ font-size:11px; opacity:0.7; font-family:'Space Mono',monospace; text-transform:uppercase; }
+  .cart-item-row{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+  .remove-link{ background:none; border:none; font-size:12px; text-decoration:underline; font-weight:700; color:var(--red); padding:0; }
+  .drawer-foot{ border-top:3px solid var(--ink); padding:18px 20px; }
+  .total-row{ display:flex; justify-content:space-between; font-weight:800; font-size:18px; margin-bottom:14px; }
+  .checkout-btn{
+    width:100%; background:var(--ink); color:var(--paper); border:3px solid var(--ink);
+    padding:14px; font-weight:800; font-size:15px; text-transform:uppercase; letter-spacing:0.05em;
+  }
+  .checkout-btn:hover{ background:var(--red); }
+  .checkout-btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  /* ---------- MODAL ---------- */
+  .modal-wrap{
+    position:fixed; inset:0; z-index:80; display:none;
+    align-items:center; justify-content:center; padding:20px;
+    background:rgba(24,20,15,0.6);
+  }
+  .modal-wrap.show{ display:flex; }
+  .modal{
+    background:var(--paper); border:4px solid var(--ink); box-shadow:var(--shadow);
+    max-width:420px; width:100%; padding:28px;
+  }
+  .modal h2{ font-size:32px; margin:0 0 6px; }
+  .modal p.sub{ font-size:13px; opacity:0.75; margin:0 0 20px; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:5px; }
+  .field input{
+    width:100%; padding:10px 12px; border:2.5px solid var(--ink);
+    background:var(--paper); font-family:inherit; font-size:14px;
+  }
+  .modal-actions{ display:flex; gap:10px; margin-top:20px; }
+  .modal-actions button{ flex:1; }
+
+  .success-stamp{
+    text-align:center; padding: 10px 0 4px;
+  }
+  .success-stamp .stamp{
+    display:inline-block; border:4px solid var(--red); color:var(--red);
+    font-family:'Bangers',cursive; font-size:26px; padding:8px 20px;
+    transform: rotate(-6deg); letter-spacing:0.06em;
+  }
+  .unlocked-list{ margin:18px 0; display:flex; flex-direction:column; gap:8px; }
+  .unlocked-item{
+    display:flex; justify-content:space-between; align-items:center;
+    border:2px solid var(--ink); padding:8px 12px; font-size:13px; font-weight:700;
+  }
+  .dl-btn{ background:var(--yellow); border:2px solid var(--ink); padding:4px 10px; font-size:11px; font-weight:800; text-transform:uppercase; }
+
+  /* ---------- TOAST ---------- */
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:var(--paper); border:3px solid var(--ink);
+    padding:12px 22px; font-weight:700; font-size:14px; z-index:90;
+    opacity:0; pointer-events:none; transition: all .25s ease;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width: 640px){
+    .hero{ padding:50px 20px 70px; }
+    .burst{ width:110px; height:110px; top:16px; right:16px; }
+    .burst span{ font-size:16px; }
+    .nav-links{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="#top" class="logo"><span class="dot"></span>INKBURST</a>
+    <div class="nav-links">
+      <a href="#browse">Browse</a>
+      <a href="#how">How it works</a>
+      <a href="#top">About</a>
+    </div>
+    <button class="cart-btn" id="cartOpenBtn" aria-label="Open cart">
+      🛒 <span>Cart</span> <span class="cart-count mono" id="cartCount">0</span>
+    </button>
+  </nav>
+
+  <div id="top"></div>
+  <section class="hero">
+    <div class="burst"><span>SOFT<br>COPIES<br>ONLY</span></div>
+    <div class="hero-eyebrow mono">No paper. No shipping. Just panels.</div>
+    <h1>YOUR NEXT<br>OBSESSION IS<br>ONE CLICK AWAY.</h1>
+    <p>Digital-only comics from independent creators — delivered instantly, readable anywhere, and never out of print.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('browse').scrollIntoView()">Start Reading</button>
+      <button class="btn-ghost" onclick="document.getElementById('how').scrollIntoView()">How It Works</button>
+    </div>
+  </section>
+
+  <div class="section" id="browse">
+    <div class="section-head">
+      <h2>Browse the Stack</h2>
+      <div class="filters mono" id="filters"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="section" id="how">
+    <div class="section-head"><h2>How It Works</h2></div>
+    <div class="steps">
+      <div class="step"><div class="num mono">01</div><h3>Pick an issue</h3><p>Browse the stack and preview the synopsis before you buy.</p></div>
+      <div class="step"><div class="num mono">02</div><h3>Checkout in seconds</h3><p>No account required. Pay once, own the digital issue forever.</p></div>
+      <div class="step"><div class="num mono">03</div><h3>Read anywhere</h3><p>Your issue unlocks instantly as a downloadable soft copy.</p></div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="#top" class="logo"><span class="dot"></span>INKBURST</a>
+    <div class="mono">© 2026 Inkburst Digital Comics — Demo storefront</div>
+  </footer>
+
+  <!-- Cart Drawer -->
+  <div class="overlay" id="overlay"></div>
+  <div class="drawer" id="drawer" aria-label="Shopping cart">
+    <div class="drawer-head">
+      <h2>Your Cart</h2>
+      <button class="icon-btn" id="drawerClose" aria-label="Close cart">✕</button>
+    </div>
+    <div class="drawer-items" id="drawerItems"></div>
+    <div class="drawer-foot">
+      <div class="total-row"><span>Total</span><span class="mono" id="cartTotal">$0.00</span></div>
+      <button class="checkout-btn" id="checkoutBtn" disabled>Checkout</button>
+    </div>
+  </div>
+
+  <!-- Checkout Modal -->
+  <div class="modal-wrap" id="checkoutModal">
+    <div class="modal">
+      <h2>Checkout</h2>
+      <p class="sub mono">Demo purchase — no real payment is processed.</p>
+      <div class="field"><label for="ckName">Name</label><input id="ckName" type="text" placeholder="Alex Rivera"></div>
+      <div class="field"><label for="ckEmail">Email</label><input id="ckEmail" type="email" placeholder="alex@email.com"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="ckCancel">Cancel</button>
+        <button class="btn-primary" id="ckConfirm">Complete Purchase</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-wrap" id="successModal">
+    <div class="modal">
+      <div class="success-stamp"><span class="stamp">UNLOCKED!</span></div>
+      <p class="sub mono" style="text-align:center;">Your soft copies are ready to download.</p>
+      <div class="unlocked-list" id="unlockedList"></div>
+      <button class="btn-primary" id="successClose" style="width:100%;">Back to Browsing</button>
+    </div>
+  </div>
+
+  <div class="toast mono" id="toast"></div>
+
+<script>
+  const COMICS = [
+    {id:1, title:"Voltage Vendetta", author:"R. Marsh", genre:"Sci-Fi", price:3.99, color:"blue", desc:"A rogue engineer wages war against a sun that refuses to set."},
+    {id:2, title:"Nightshade Chronicles", author:"P. Ilo", genre:"Horror", price:4.49, color:"violet", desc:"Every full moon, the town forgets — except one girl who writes it all down."},
+    {id:3, title:"The Last Aegis", author:"D. Conroy", genre:"Superhero", price:4.99, color:"red", desc:"The final shield-bearer must choose between the city and her family."},
+    {id:4, title:"Static & Stardust", author:"M. Oyelaran", genre:"Sci-Fi", price:3.49, color:"cyan", desc:"Two radio signals, forty years apart, are somehow having a conversation."},
+    {id:5, title:"Iron Marrow", author:"T. Vann", genre:"Fantasy", price:5.49, color:"yellow", desc:"A blacksmith forges weapons from the bones of gods who no longer need them."},
+    {id:6, title:"Wraith Court", author:"S. Delacroix", genre:"Noir", price:4.29, color:"ink", desc:"In a city run by ghosts, the newest detective is the only living witness."},
+    {id:7, title:"Solar Flare Society", author:"K. Anwar", genre:"Superhero", price:3.99, color:"yellow", desc:"Four interns accidentally become the world's most unqualified league."},
+    {id:8, title:"Midnight Marigold", author:"J. Huang", genre:"Fantasy", price:4.79, color:"violet", desc:"A florist discovers her shop's back door opens onto a different century each night."}
+  ];
+
+  const EMBLEMS = {
+    "Sci-Fi": `<circle cx="50%" cy="30%" r="30" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3"/><circle cx="50%" cy="30%" r="46" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>`,
+    "Horror": `<path d="M 30 60 A 30 30 0 1 0 70 60 A 24 24 0 1 1 30 60 Z" fill="rgba(255,255,255,0.45)"/>`,
+    "Superhero": `<polygon points="50,10 90,25 90,55 50,90 10,55 10,25" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3"/>`,
+    "Fantasy": `<polygon points="50,8 65,45 50,92 35,45" fill="rgba(255,255,255,0.4)"/>`,
+    "Noir": `<polygon points="20,50 40,30 60,30 80,50 65,50 65,75 35,75 35,50" fill="rgba(255,255,255,0.4)"/>`
+  };
+
+  let cart = [];
+
+  function fmt(n){ return '$' + n.toFixed(2); }
+
+  function renderFilters(){
+    const genres = ['All', ...new Set(COMICS.map(c=>c.genre))];
+    const el = document.getElementById('filters');
+    el.innerHTML = genres.map((g,i)=>`<button class="chip ${i===0?'active':''}" data-genre="${g}">${g}</button>`).join('');
+    el.querySelectorAll('.chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        el.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        renderGrid(btn.dataset.genre);
+      });
+    });
+  }
+
+  function cardHTML(c){
+    return `
+    <div class="card">
+      <div class="cover g-${c.color}">
+        <svg width="0" height="0"></svg>
+        <div class="emblem" style="position:absolute; inset:0;">
+          <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">${EMBLEMS[c.genre]}</svg>
+        </div>
+        <div class="cover-title">${c.title}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-genre">${c.genre} · Issue #00${c.id}</div>
+        <h3 class="card-title">${c.title}</h3>
+        <div class="card-author">by ${c.author}</div>
+        <p class="card-desc">${c.desc}</p>
+        <div class="card-foot">
+          <span class="price mono">${fmt(c.price)}</span>
+          <button class="add-btn" data-id="${c.id}">Add to Cart</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderGrid(genre='All'){
+    const grid = document.getElementById('grid');
+    const list = genre==='All' ? COMICS : COMICS.filter(c=>c.genre===genre);
+    grid.innerHTML = list.map(cardHTML).join('');
+    grid.querySelectorAll('.add-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> addToCart(parseInt(btn.dataset.id)));
+    });
+  }
+
+  function addToCart(id){
+    const comic = COMICS.find(c=>c.id===id);
+    if(cart.find(c=>c.id===id)) { showToast(`Already in your cart — ${comic.title}`); return; }
+    cart.push(comic);
+    updateCartUI();
+    showToast(`ZAP! Added "${comic.title}" to your cart`);
+    const cc = document.getElementById('cartCount');
+    cc.classList.remove('bump'); void cc.offsetWidth; cc.classList.add('bump');
+  }
+
+  function removeFromCart(id){
+    cart = cart.filter(c=>c.id!==id);
+    updateCartUI();
+  }
+
+  function updateCartUI(){
+    document.getElementById('cartCount').textContent = cart.length;
+    const itemsEl = document.getElementById('drawerItems');
+    if(cart.length===0){
+      itemsEl.innerHTML = `<div class="cart-empty">Your cart is empty.<br>Go find something worth reading.</div>`;
+    } else {
+      itemsEl.innerHTML = cart.map(c=>`
+        <div class="cart-item">
+          <div class="mini-cover g-${c.color}"></div>
+          <div class="cart-item-info">
+            <div class="t">${c.title}</div>
+            <div class="g">${c.genre}</div>
+            <div class="cart-item-row">
+              <span class="mono">${fmt(c.price)}</span>
+              <button class="remove-link" data-id="${c.id}">Remove</button>
+            </div>
+          </div>
+        </div>`).join('');
+      itemsEl.querySelectorAll('.remove-link').forEach(btn=>{
+        btn.addEventListener('click', ()=> removeFromCart(parseInt(btn.dataset.id)));
+      });
+    }
+    const total = cart.reduce((s,c)=>s+c.price,0);
+    document.getElementById('cartTotal').textContent = fmt(total);
+    document.getElementById('checkoutBtn').disabled = cart.length===0;
+  }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=> t.classList.remove('show'), 2200);
+  }
+
+  // Drawer open/close
+  const drawer = document.getElementById('drawer');
+  const overlay = document.getElementById('overlay');
+  function openDrawer(){ drawer.classList.add('show'); overlay.classList.add('show'); }
+  function closeDrawer(){ drawer.classList.remove('show'); overlay.classList.remove('show'); }
+  document.getElementById('cartOpenBtn').addEventListener('click', openDrawer);
+  document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', ()=>{ closeDrawer(); closeModal(checkoutModal); closeModal(successModal); });
+
+  // Modals
+  const checkoutModal = document.getElementById('checkoutModal');
+  const successModal = document.getElementById('successModal');
+  function openModal(m){ m.classList.add('show'); }
+  function closeModal(m){ m.classList.remove('show'); }
+
+  document.getElementById('checkoutBtn').addEventListener('click', ()=>{
+    if(cart.length===0) return;
+    openModal(checkoutModal);
+  });
+  document.getElementById('ckCancel').addEventListener('click', ()=> closeModal(checkoutModal));
+  document.getElementById('ckConfirm').addEventListener('click', ()=>{
+    const unlocked = document.getElementById('unlockedList');
+    unlocked.innerHTML = cart.map(c=>`
+      <div class="unlocked-item">
+        <span>${c.title}</span>
+        <button class="dl-btn" onclick="alert('Simulated download: ${c.title}.pdf')">Download</button>
+      </div>`).join('');
+    closeModal(checkoutModal);
+    openModal(successModal);
+    cart = [];
+    updateCartUI();
+    closeDrawer();
+  });
+  document.getElementById('successClose').addEventListener('click', ()=> closeModal(successModal));
+
+  renderFilters();
+  renderGrid();
+  updateCartUI();
+</script>
+</body>
+</html>
