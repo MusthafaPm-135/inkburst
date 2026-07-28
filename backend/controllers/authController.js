@@ -7,34 +7,54 @@ const db = require("../config/db");
 exports.register = async (req, res) => {
 
     const { username, email, password } = req.body;
+    const normalizedUsername = username?.trim();
+    const normalizedEmail = email?.trim().toLowerCase();
 
-    if (!username || !email || !password) {
+    if (!normalizedUsername || !normalizedEmail || !password) {
         return res.status(400).json({
             success: false,
             message: "All fields are required"
         });
     }
 
+    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+        return res.status(400).json({ success: false, message: "Enter a valid email address" });
+    }
+
+    if (password.length < 6) {
+        return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+    }
+
     try {
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const sql = `
-            INSERT INTO users 
-            (username, email, password)
-            VALUES (?, ?, ?)
-        `;
-
         db.query(
-            sql,
-            [username, email, hashedPassword],
-            (err, result) => {
+            "SELECT id FROM users WHERE email = ?",
+            [normalizedEmail],
+            async (lookupError, users) => {
+                if (lookupError) {
+                    return res.status(500).json({ success: false, message: "Unable to check the email address" });
+                }
+
+                if (users.length > 0) {
+                    return res.status(409).json({ success: false, message: "An account with this email already exists" });
+                }
+
+                const hashedPassword = await bcrypt.hash(password, 10);
+                const sql = `
+                    INSERT INTO users
+                    (username, email, password)
+                    VALUES (?, ?, ?)
+                `;
+
+                db.query(sql, [normalizedUsername, normalizedEmail, hashedPassword], (err) => {
 
                 if (err) {
-                    return res.status(500).json({
-                        success:false,
-                        message:"User already exists or database error"
-                    });
+                    if (err.code === "ER_DUP_ENTRY") {
+                        return res.status(409).json({ success: false, message: "An account with this email already exists" });
+                    }
+
+                    console.error("REGISTER ERROR:", err);
+                    return res.status(500).json({ success: false, message: "Unable to create account" });
                 }
 
 
@@ -43,6 +63,7 @@ exports.register = async (req, res) => {
                     message:"Registration successful"
                 });
 
+                });
             }
         );
 
@@ -98,7 +119,11 @@ exports.login = (req,res)=>{
             }
 
 
-            const user=result[0];
+            const user = result[0];
+
+            console.log("USER FROM DATABASE:", user);
+
+            console.log("LOGIN USER:", user);
 
 
             const passwordMatch =
@@ -119,15 +144,13 @@ exports.login = (req,res)=>{
 
 
             const token = jwt.sign(
-                {
-                    id:user.id,
-                    email:user.email,
-                    role:user.role
-                },
-                process.env.JWT_SECRET,
-                {
-                    expiresIn:"7d"
-                }
+            {
+                id: user.id,
+                email: user.email,
+                role: user.role
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
             );
 	
 	res.cookie("token", token, {
@@ -148,7 +171,8 @@ exports.login = (req,res)=>{
             user: {
                 id: user.id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                role: user.role
             }
         });
 
@@ -157,4 +181,51 @@ exports.login = (req,res)=>{
     );
 
 
+};
+
+// ===============================
+// LOGOUT
+// ===============================
+exports.logout = (req, res) => {
+
+    res.clearCookie("token", {
+        httpOnly: true,
+        sameSite: "lax",
+    });
+
+    res.json({
+        success: true,
+        message: "Logged out successfully"
+    });
+
+};
+
+// ===============================
+// CURRENT USER
+// ===============================
+exports.me = (req, res) => {
+    db.query(
+        "SELECT id, username, email, role FROM users WHERE id = ?",
+        [req.user.id],
+        (err, users) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: "Unable to load user details"
+                });
+            }
+
+            if (users.length === 0) {
+                return res.status(401).json({
+                    success: false,
+                    message: "User not found"
+                });
+            }
+
+            res.json({
+                success: true,
+                user: users[0]
+            });
+        }
+    );
 };

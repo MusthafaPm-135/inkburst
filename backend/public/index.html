@@ -96,7 +96,7 @@
     box-shadow: var(--shadow);
     background:
       radial-gradient(circle, rgba(24,20,15,0.16) 1.6px, transparent 1.8px) 0 0/16px 16px,
-      linear-gradient(135deg, var(--yellow) 0%, var(--red) 55%, var(--violet) 100%);
+      linear-gradient(135deg, var(--yellow) 0%, var(--red) 55%);
     overflow:hidden;
   }
   .hero-eyebrow{
@@ -231,6 +231,26 @@
   .g-cyan{ background: linear-gradient(160deg, var(--cyan), #145762); }
   .g-violet{ background: linear-gradient(160deg, var(--violet), #391f57); }
   .g-ink{ background: linear-gradient(160deg, #4b463c, var(--ink)); }
+
+  /* ---------- COMING SOON ---------- */
+  .coming-soon{
+    grid-column: 1 / -1;
+    border: 4px solid var(--ink);
+    box-shadow: var(--shadow);
+    background:
+      radial-gradient(circle, rgba(24,20,15,0.12) 1.4px, transparent 1.6px) 0 0/14px 14px,
+      var(--paper-dim);
+    padding: 64px 30px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    gap:14px;
+  }
+  .coming-soon .stamp{
+    display:inline-block; border:4px solid var(--red); color:var(--red);
+    font-family:'Bangers',cursive; font-size:clamp(30px, 6vw, 52px); padding:10px 26px;
+    transform: rotate(-4deg); letter-spacing:0.06em;
+  }
+  .coming-soon p{ font-size:14px; font-weight:600; opacity:0.8; max-width:420px; margin:0; }
 
   /* ---------- HOW IT WORKS ---------- */
   .steps{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; }
@@ -440,16 +460,52 @@
   <div class="toast mono" id="toast"></div>
 
 <script>
-  const COMICS = [
-    {id:1, title:"Voltage Vendetta", author:"R. Marsh", genre:"Sci-Fi", price:3.99, color:"blue", desc:"A rogue engineer wages war against a sun that refuses to set."},
-    {id:2, title:"Nightshade Chronicles", author:"P. Ilo", genre:"Horror", price:4.49, color:"violet", desc:"Every full moon, the town forgets — except one girl who writes it all down."},
-    {id:3, title:"The Last Aegis", author:"D. Conroy", genre:"Superhero", price:4.99, color:"red", desc:"The final shield-bearer must choose between the city and her family."},
-    {id:4, title:"Static & Stardust", author:"M. Oyelaran", genre:"Sci-Fi", price:3.49, color:"cyan", desc:"Two radio signals, forty years apart, are somehow having a conversation."},
-    {id:5, title:"Iron Marrow", author:"T. Vann", genre:"Fantasy", price:5.49, color:"yellow", desc:"A blacksmith forges weapons from the bones of gods who no longer need them."},
-    {id:6, title:"Wraith Court", author:"S. Delacroix", genre:"Noir", price:4.29, color:"ink", desc:"In a city run by ghosts, the newest detective is the only living witness."},
-    {id:7, title:"Solar Flare Society", author:"K. Anwar", genre:"Superhero", price:3.99, color:"yellow", desc:"Four interns accidentally become the world's most unqualified league."},
-    {id:8, title:"Midnight Marigold", author:"J. Huang", genre:"Fantasy", price:4.79, color:"violet", desc:"A florist discovers her shop's back door opens onto a different century each night."}
-  ];
+  let COMICS = [];
+
+async function loadComics() {
+
+    try {
+
+        const response = await fetch("http://localhost:5000/api/comics");
+
+        const data = await response.json();
+
+        if (data.success) {
+
+            COMICS = data.comics.map(comic => ({
+
+                id: comic.id,
+                title: comic.title,
+                author: comic.author,
+                genre: comic.genre,
+                price: parseFloat(comic.price),
+                desc: comic.description,
+
+                color: "red",
+
+                cover:
+                    "http://localhost:5000/uploads/covers/" +
+                    comic.cover_image,
+
+                pdf:
+                    "http://localhost:5000/uploads/pdfs/" +
+                    comic.pdf_file
+
+            }));
+
+            renderFilters();
+            renderGrid();
+            updateCartUI();
+
+        }
+
+    } catch (err) {
+
+        console.error(err);
+
+    }
+
+}
 
   const EMBLEMS = {
     "Sci-Fi": `<circle cx="50%" cy="30%" r="30" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3"/><circle cx="50%" cy="30%" r="46" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>`,
@@ -464,8 +520,10 @@
   function fmt(n){ return '$' + n.toFixed(2); }
 
   function renderFilters(){
-    const genres = ['All', ...new Set(COMICS.map(c=>c.genre))];
     const el = document.getElementById('filters');
+    el.innerHTML = '';
+    if(COMICS.length === 0) return;
+    const genres = ['All', ...new Set(COMICS.map(c=>c.genre))];
     el.innerHTML = genres.map((g,i)=>`<button class="chip ${i===0?'active':''}" data-genre="${g}">${g}</button>`).join('');
     el.querySelectorAll('.chip').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -477,30 +535,78 @@
   }
 
   function cardHTML(c){
+
     return `
     <div class="card">
-      <div class="cover g-${c.color}">
-        <svg width="0" height="0"></svg>
-        <div class="emblem" style="position:absolute; inset:0;">
-          <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">${EMBLEMS[c.genre]}</svg>
+
+        <div class="cover">
+
+            <img
+                src="${c.cover}"
+                alt="${c.title}"
+                style="
+                    width:100%;
+                    height:100%;
+                    object-fit:cover;
+                "
+            >
+
         </div>
-        <div class="cover-title">${c.title}</div>
-      </div>
-      <div class="card-body">
-        <div class="card-genre">${c.genre} · Issue #00${c.id}</div>
-        <h3 class="card-title">${c.title}</h3>
-        <div class="card-author">by ${c.author}</div>
-        <p class="card-desc">${c.desc}</p>
-        <div class="card-foot">
-          <span class="price mono">${fmt(c.price)}</span>
-          <button class="add-btn" data-id="${c.id}">Add to Cart</button>
+
+        <div class="card-body">
+
+            <div class="card-genre">
+                ${c.genre} · Issue #00${c.id}
+            </div>
+
+            <h3 class="card-title">
+                ${c.title}
+            </h3>
+
+            <div class="card-author">
+                by ${c.author}
+            </div>
+
+            <p class="card-desc">
+                ${c.desc}
+            </p>
+
+            <div class="card-foot">
+
+                <span class="price mono">
+                    ${fmt(c.price)}
+                </span>
+
+                <button
+                    class="add-btn"
+                    data-id="${c.id}"
+                >
+                    Add to Cart
+                </button>
+
+            </div>
+
         </div>
-      </div>
+
+    </div>
+    `;
+
+}
+
+  function comingSoonHTML(){
+    return `
+    <div class="coming-soon">
+      <span class="stamp">COMING SOON</span>
+      <p>New issues are being inked right now. Check back shortly to start reading.</p>
     </div>`;
   }
 
   function renderGrid(genre='All'){
     const grid = document.getElementById('grid');
+    if(COMICS.length === 0){
+      grid.innerHTML = comingSoonHTML();
+      return;
+    }
     const list = genre==='All' ? COMICS : COMICS.filter(c=>c.genre===genre);
     grid.innerHTML = list.map(cardHTML).join('');
     grid.querySelectorAll('.add-btn').forEach(btn=>{
@@ -593,9 +699,7 @@
   });
   document.getElementById('successClose').addEventListener('click', ()=> closeModal(successModal));
 
-  renderFilters();
-  renderGrid();
-  updateCartUI();
+  loadComics();
 </script>
 </body>
 </html>

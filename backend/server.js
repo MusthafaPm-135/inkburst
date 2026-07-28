@@ -1,19 +1,19 @@
 // server.js
 
+require("dotenv").config();
+const orderRoutes = require("./routes/orders");
 const cartRoutes = require("./routes/cart");
 const db = require("./config/db");
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 
-// Load environment variables
-dotenv.config();
 
 // Import routes and middleware
 const comicRoutes = require("./routes/comics");
 const authRoutes = require("./routes/auth");
+const adminRoutes = require("./routes/admin");
 const auth = require("./middleware/auth");
 
 // Create Express app
@@ -39,8 +39,8 @@ app.use(cookieParser());
 
 // Uploaded comic images/files
 app.use(
-    "/uploads",
-    express.static(path.join(__dirname, "uploads"))
+    "/uploads/covers",
+    express.static(path.join(__dirname, "uploads/covers"))
 );
 
 // Public folder
@@ -53,11 +53,15 @@ app.use(
 // API Routes
 // =======================
 
+app.use("/api/orders", orderRoutes);
+
 app.use("/api/cart", cartRoutes);
 
 app.use("/api/auth", authRoutes);
 
 app.use("/api/comics", comicRoutes);
+
+app.use("/api/admin", adminRoutes);
 
 
 // =======================
@@ -75,32 +79,6 @@ app.get("/", (req, res) => {
 
 app.get("/api/profile", auth, (req, res) => {
 
-    db.query(
-        "SELECT id, username, email, role FROM users WHERE id = ?",
-        [req.user.id],
-        (err, result) => {
-
-            if (err) {
-                return res.status(500).json({
-                    success: false,
-                    message: "Database error"
-                });
-            }
-
-            if (result.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "User not found"
-                });
-            }
-
-            res.json({
-                success: true,
-                user: result[0]
-            });
-
-        }
-    );
 
 });
 
