@@ -3,7 +3,7 @@ import API from "./axios";
 // Add comic to cart
 export const addToCart = async (comicId) => {
     const res = await API.post("/cart/add", {
-        comic_id: comicId
+        comicId
     });
 
     return res.data;
