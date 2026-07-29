@@ -1,8 +1,12 @@
 import axios from 'axios';
 
-const api = axios.create({
-  // Use your live Render backend URL here
-  baseURL: 'https://inkburst-backend.onrender.com/api', 
+// 1. Export the origin so ComicCard can use it for image URLs
+export const API_ORIGIN = 'https://inkburst-backend.onrender.com';
+
+// 2. Setup the Axios instance for your data fetching
+const API = axios.create({
+  baseURL: `${API_ORIGIN}/api`, 
 });
 
-export default api;
+// 3. Export the default instance
+export default API;
