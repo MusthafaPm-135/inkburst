@@ -1,8 +1,9 @@
-import API from "./axios"; // Import your custom API instance that has the token interceptor
+import API from "./axios";
 
 export const getComics = async () => {
     try {
-        const response = await API.get("/comics"); // Use API.get instead of axios.get
+        // This automatically attaches your localStorage token!
+        const response = await API.get("/comics"); 
         return response.data;
     } catch (error) {
         throw error;
