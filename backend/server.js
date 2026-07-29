@@ -32,12 +32,14 @@ const allowedOrigins = [
     process.env.FRONTEND_URL
 ].filter(Boolean);
 
+// Inside backend/index.js (or server.js)
+const cors = require('cors');
+
 app.use(cors({
-    origin(origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-        return callback(new Error("Origin is not allowed by CORS"));
-    },
-    credentials: true
+  // Change this to your exact new frontend URL
+  origin: "https://keyracomics.vercel.app", 
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
 }));
 
 app.use(express.json());
