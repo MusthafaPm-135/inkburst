@@ -32,8 +32,6 @@ const allowedOrigins = [
     process.env.FRONTEND_URL
 ].filter(Boolean);
 
-// Inside backend/index.js (or server.js)
-const cors = require('cors');
 
 app.use(cors({
   // Change this to your exact new frontend URL
