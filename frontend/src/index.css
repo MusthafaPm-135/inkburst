@@ -109,3 +109,52 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* ===============================
+   Responsive Navbar Mobile Fix
+   =============================== */
+
+@media (max-width: 768px) {
+  /* Ensure the navbar container handles spacing cleanly on mobile */
+  .nav {
+    position: relative;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Hide the regular horizontal links by default on phones */
+  .nav-links {
+    display: none; 
+    width: 100%;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    flex-direction: column;
+    padding: 16px 0;
+    gap: 12px;
+    z-index: 100;
+  }
+
+  /* When the mobile menu is toggled open, show them */
+  .nav-links.active {
+    display: flex;
+  }
+
+  /* Style the mobile links for readability */
+  .nav-links a {
+    padding: 8px 16px;
+    font-size: 16px;
+    color: var(--text-h);
+    text-decoration: none;
+  }
+  
+  .nav-links a:hover {
+    background: var(--accent-bg);
+    color: var(--accent);
+  }
+}
