@@ -1,5 +1,5 @@
 import { useState } from "react";
-import API from "./api/axios";
+import api from "./api/axios";
 
 function Signup(){
 
@@ -24,7 +24,7 @@ function Signup(){
 
         try{
 
-            const res = await API.post(
+            const res = await api.post(
                 "/auth/register",
                 form
             );
@@ -77,7 +77,7 @@ function Signup(){
 
         </div>
     );
-}
+}   
 
 
 export default Signup;

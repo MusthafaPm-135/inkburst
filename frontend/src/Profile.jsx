@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import API from "./api/axios";
+import api from "./api/axios";
 
 function Profile() {
 
@@ -12,7 +12,7 @@ function Profile() {
 
             try {
 
-                const res = await API.get("/profile");
+                const res = await api.get("/profile");
 
                 console.log("PROFILE RESPONSE:", res.data);
 
