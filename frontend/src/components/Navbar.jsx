@@ -15,7 +15,7 @@ function Navbar() {
                 {/* <span className="dot"></span> */ }
                 {/* KEYRA COMICS */ }
                 <img 
-                    src={LOGO_URL} 
+                    src={/logo.png} 
                     alt="KEYRA COMICS" 
                     className="site-logo-image" 
                     style={{ height: "40px", width: "auto", display: "block" }} 
