@@ -12,8 +12,14 @@ function Navbar() {
     return (
         <nav className="nav">
             <a href="/" className="logo">
-                <span className="dot"></span>
-                KEYRA COMICS
+                {/* <span className="dot"></span> */ }
+                {/* KEYRA COMICS */ }
+                <img 
+                    src={LOGO_URL} 
+                    alt="KEYRA COMICS" 
+                    className="site-logo-image" 
+                    style={{ height: "40px", width: "auto", display: "block" }} 
+                />
             </a>
 
             <div className={`nav-links ${isOpen ? "active" : ""}`}>

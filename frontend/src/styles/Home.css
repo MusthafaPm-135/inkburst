@@ -408,3 +408,16 @@
       justify-content: center;
     }
   }
+  /* Adjust the size of the logo image */
+.site-logo-image {
+  max-height: 45px; /* Tweak this value to match your header height */
+  width: auto;
+  display: block;
+}
+
+/* Ensure the logo link itself is centered */
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
