@@ -6,7 +6,12 @@ module.exports = (req, res, next) => {
     console.log("COOKIE HEADER:", req.headers.cookie);
     console.log("PARSED COOKIES:", req.cookies);
 
-    const token = req.cookies.token;
+    // 1. Check for the token in the Authorization header first (Bearer <token>)
+    const authHeader = req.headers.authorization;
+    const headerToken = authHeader && authHeader.split(" ")[1];
+
+    // 2. Fall back to the cookie if the header isn't present
+    const token = headerToken || req.cookies?.token;
 
     if (!token) {
         return res.status(401).json({
@@ -16,7 +21,6 @@ module.exports = (req, res, next) => {
     }
 
     try {
-
         console.log("JWT_SECRET:", process.env.JWT_SECRET);
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -28,7 +32,6 @@ module.exports = (req, res, next) => {
         next();
 
     } catch (err) {
-
         console.error("JWT VERIFY ERROR:", err);
 
         return res.status(401).json({
@@ -36,7 +39,6 @@ module.exports = (req, res, next) => {
             message: "Invalid token",
             error: err.message
         });
-
     }
 
 };
