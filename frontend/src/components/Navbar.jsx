@@ -11,7 +11,7 @@ function Navbar() {
                 className="logo"
             >
                 <span className="dot"></span>
-                INKBURST
+                KEYRA COMICS
             </a>
 
             <div className="nav-links">

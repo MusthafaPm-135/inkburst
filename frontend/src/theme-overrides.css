@@ -1,0 +1,6 @@
+/* Keep every editable field and action label readable in the light Keyra Comics theme. */
+input, textarea, select { color: #18140f !important; }
+.store-button { background: var(--yellow) !important; color: #18140f !important; }
+.store-button:hover { background: var(--paper-dim) !important; }
+.primary-button, .secondary-button, .danger-button { color: #20192b !important; }
+.danger-button { background: #ffb6c7 !important; }

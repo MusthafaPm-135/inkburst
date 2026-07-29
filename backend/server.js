@@ -19,13 +19,24 @@ const auth = require("./middleware/auth");
 // Create Express app
 const app = express();
 
+// Render sits behind a proxy; this keeps secure production cookies working.
+app.set("trust proxy", 1);
+
 
 // =======================
 // Middleware
 // =======================
 
+const allowedOrigins = [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error("Origin is not allowed by CORS"));
+    },
     credentials: true
 }));
 

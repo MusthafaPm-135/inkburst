@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { getComics } from "../api/comics";
 import ComicCard from "../components/ComicCard";
+import SiteHeader from "../components/SiteHeader";
+import BrandMark from "../components/BrandMark";
 import "../styles/Home.css";
 
 function HomeDesign() {
-    const navigate = useNavigate();
     const [comics, setComics] = useState([]);
+    const [activeGenre, setActiveGenre] = useState("All");
 
     useEffect(() => {
         loadComics();
@@ -21,30 +22,13 @@ function HomeDesign() {
         }
     };
 
+    const genres = ["All", ...new Set(comics.map((comic) => comic.genre).filter(Boolean))];
+    const visibleComics = activeGenre === "All" ? comics : comics.filter((comic) => comic.genre === activeGenre);
+
     return (
         <>
-        <nav className="nav">
-
-    <a href="/" className="logo">
-        <span className="dot"></span>
-        INKBURST
-    </a>
-
-    <div className="nav-links">
-        <a href="#browse">Browse</a>
-        <a href="#how">How it works</a>
-        <a href="#top">About</a>
-    </div>
-
-    <button
-        className="cart-btn"
-        onClick={() => navigate("/cart")}
-    >
-        🛒 Cart
-    </button>
-
-</nav>
-<section className="hero">
+        <SiteHeader />
+<section className="hero" id="top">
 
     <div className="burst">
         <span>
@@ -108,11 +92,14 @@ function HomeDesign() {
 
     <div className="section-head">
         <h2>Browse the Stack</h2>
+        <div className="filters" aria-label="Filter comics by genre">
+            {genres.map((genre) => <button key={genre} className={`chip ${activeGenre === genre ? "active" : ""}`} onClick={() => setActiveGenre(genre)}>{genre}</button>)}
+        </div>
     </div>
 
     <div className="grid">
 
-    {comics.map((comic) => (
+    {visibleComics.map((comic) => (
 
         <ComicCard
             key={comic.id}
@@ -120,6 +107,8 @@ function HomeDesign() {
         />
 
     ))}
+
+    {visibleComics.length === 0 && <p className="browse-empty">No comics in this category yet.</p>}
 
 </div>
 
@@ -160,12 +149,27 @@ function HomeDesign() {
     </div>
 
 </section>
+<section className="section about-section" id="about">
+    <div className="section-head">
+        <h2>About Keyra Comics</h2>
+    </div>
+    <div className="about-grid">
+        <div className="about-copy">
+            <p className="eyebrow mono">STORIES WITHOUT THE WAIT</p>
+            <h3>Independent comics, always within reach.</h3>
+            <p>Keyra Comics is a digital shelf for readers who love bold art, big ideas, and the feeling of discovering a new favourite issue.</p>
+            <p>Every comic is delivered digitally, so you can build your library, return to your purchases, and keep reading wherever you are.</p>
+        </div>
+        <div className="about-points">
+            <div><strong>Digital-first</strong><span>No shipping. No paper. Just panels.</span></div>
+            <div><strong>Reader-owned</strong><span>Purchased comics stay in your library.</span></div>
+            <div><strong>Creator-led</strong><span>A home for memorable independent stories.</span></div>
+        </div>
+    </div>
+</section>
 <footer>
 
-    <a href="/" className="logo">
-        <span className="dot"></span>
-        INKBURST
-    </a>
+    <a href="/" className="logo brand-link"><BrandMark /></a>
 
     <div className="mono">
         © 2026 Inkburst Digital Comics

@@ -6,6 +6,9 @@ import Register from "./pages/Register";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Library from "./pages/Library";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminRoute from "./components/AdminRoute";
+import RequireAuth from "./components/RequireAuth";
 
 function App() {
     return (
@@ -18,11 +21,15 @@ function App() {
 
                 <Route path="/register" element={<Register />} />
 
-                <Route path="/cart" element={<Cart />} />
+                <Route element={<RequireAuth />}>
+                    <Route path="/cart" element={<Cart />} />
+                    <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/library" element={<Library />} />
+                </Route>
 
-                <Route path="/checkout" element={<Checkout />} />
-
-                <Route path="/library" element={<Library />} />
+                <Route element={<AdminRoute />}>
+                    <Route path="/admin" element={<AdminDashboard />} />
+                </Route>
 
             </Routes>
         </BrowserRouter>

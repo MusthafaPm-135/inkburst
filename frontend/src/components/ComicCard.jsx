@@ -1,29 +1,21 @@
 import { useNavigate } from "react-router-dom";
+import API, { API_ORIGIN } from "../api/axios";
 
 function ComicCard({ comic }) {
 
     const navigate = useNavigate();
 
-    const buyNow = () => {
-
-        const token = localStorage.getItem("token");
-
-        if (!token) {
+    const buyNow = async () => {
+        if (!localStorage.getItem("user")) {
             navigate("/login");
             return;
         }
-
-        let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-        const exists = cart.find(item => item.id === comic.id);
-
-        if (!exists) {
-            cart.push(comic);
+        try {
+            await API.post("/cart/add", { comicId: comic.id });
+            navigate("/cart");
+        } catch (error) {
+            alert(error.response?.data?.message || "Could not add this comic to your cart.");
         }
-
-        localStorage.setItem("cart", JSON.stringify(cart));
-
-        navigate("/cart");
     };
 
     return (
@@ -31,22 +23,12 @@ function ComicCard({ comic }) {
         <div className="card">
 
             <img
-                src={`http://localhost:5000/${comic.cover}`}
+                className="comic-cover"
+                src={`${API_ORIGIN}/uploads/covers/${comic.cover_image || comic.cover}`}
                 alt={comic.title}
-                width="220"
             />
 
-            <h3>{comic.title}</h3>
-
-            <p>{comic.author}</p>
-
-            <p>{comic.genre}</p>
-
-            <h4>₹{comic.price}</h4>
-
-            <button onClick={buyNow}>
-                Buy Now
-            </button>
+            <div className="card-body"><span className="card-genre">{comic.genre || "Comic"} · ISSUE #{String(comic.id).padStart(3, "0")}</span><h3 className="card-title">{comic.title}</h3><p className="card-author">by {comic.author}</p><p className="card-desc">{comic.description || "A digital comic for your library."}</p><div className="card-foot"><span className="price">₹{Number(comic.price).toFixed(2)}</span><button className="add-btn" onClick={buyNow}>Add to cart</button></div></div>
 
         </div>
 

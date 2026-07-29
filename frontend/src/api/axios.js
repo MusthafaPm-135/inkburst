@@ -1,8 +1,8 @@
-import axios from "axios";
+import axios from 'axios';
 
-const API = axios.create({
-    baseURL: "http://localhost:5000/api",
-    withCredentials: true
+const api = axios.create({
+  // Use your live Render backend URL here
+  baseURL: 'https://inkburst-backend.onrender.com/api', 
 });
 
-export default API;
+export default api;

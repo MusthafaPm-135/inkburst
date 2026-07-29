@@ -1,85 +1,26 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import API from "../api/axios";
+import "./Storefront.css";
 
 function Login() {
-
     const navigate = useNavigate();
+    const location = useLocation();
+    const [form, setForm] = useState({ email: "", password: "" });
+    const [error, setError] = useState("");
+    const [busy, setBusy] = useState(false);
 
-    const [form, setForm] = useState({
-        email: "",
-        password: ""
-    });
-
-    const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
-        });
-    };
-
-    const login = async (e) => {
-
-        e.preventDefault();
-
+    const submit = async (event) => {
+        event.preventDefault(); setBusy(true); setError("");
         try {
-
-            const res = await API.post("/auth/login", form);
-
-console.log("LOGIN RESPONSE:", res.data);
-
-localStorage.setItem("token", res.data.token);
-localStorage.setItem("user", JSON.stringify(res.data.user));
-
-console.log("TOKEN:", localStorage.getItem("token"));
-
-alert("Login Successful");
-
-navigate("/cart");
-
-        } catch (err) {
-
-            alert(
-                err.response?.data?.message ||
-                "Login Failed"
-            );
-
-        }
-
+            const response = await API.post("/auth/login", form);
+            localStorage.setItem("user", JSON.stringify(response.data.user));
+            localStorage.setItem("token", response.data.token);
+            navigate(response.data.user?.role === "admin" ? "/admin" : (location.state?.from || "/"));
+        } catch (requestError) { setError(requestError.response?.data?.message || "Login failed. Please try again."); }
+        finally { setBusy(false); }
     };
 
-    return (
-
-        <div>
-
-            <h2>Login</h2>
-
-            <form onSubmit={login}>
-
-                <input
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    onChange={handleChange}
-                />
-
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Password"
-                    onChange={handleChange}
-                />
-
-                <button type="submit">
-                    Login
-                </button>
-
-            </form>
-
-        </div>
-
-    );
-
+    return <main className="account-page"><section className="account-card"><Link className="account-logo" to="/">● KEYRA COMICS</Link><p className="eyebrow">WELCOME BACK</p><h1>Pick up where you left off.</h1><p className="account-copy">Log in to manage your cart and read your purchased comics.</p>{error && <p className="form-error">{error}</p>}<form onSubmit={submit} className="account-form"><label>Email<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label><label>Password<input required type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label><button className="store-button" disabled={busy}>{busy ? "Logging in…" : "Log in"}</button></form><p>New here? <Link to="/register">Create an account</Link></p></section></main>;
 }
-
 export default Login;
