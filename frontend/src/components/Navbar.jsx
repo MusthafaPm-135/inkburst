@@ -3,11 +3,10 @@ import { useNavigate } from "react-router-dom";
 
 function Navbar() {
     const navigate = useNavigate();
-    // 1. State to track if the mobile menu is open
     const [isOpen, setIsOpen] = useState(false);
 
     const handleLinkClick = () => {
-        setIsOpen(false); // Close menu when a link is tapped
+        setIsOpen(false);
     };
 
     return (
@@ -17,7 +16,6 @@ function Navbar() {
                 KEYRA COMICS
             </a>
 
-            {/* 2. Toggle 'active' class based on state */}
             <div className={`nav-links ${isOpen ? "active" : ""}`}>
                 <a href="#browse" onClick={handleLinkClick}>
                     Browse
@@ -30,7 +28,7 @@ function Navbar() {
                 </a>
             </div>
 
-            <div className="nav-actions" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <div className="nav-actions">
                 <button
                     className="cart-btn"
                     onClick={() => navigate("/cart")}
@@ -40,7 +38,6 @@ function Navbar() {
                     <span className="cart-count mono">0</span>
                 </button>
 
-                {/* 3. The Hamburger Menu Button */}
                 <button 
                     className="hamburger-btn" 
                     onClick={() => setIsOpen(!isOpen)}

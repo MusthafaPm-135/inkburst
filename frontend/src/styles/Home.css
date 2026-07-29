@@ -1,4 +1,4 @@
-  @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700;800;900&display=swap');
 
   :root{
     --ink:#18140f;
@@ -390,22 +390,21 @@
     .about-grid{ grid-template-columns:1fr; }
   }
 
-  /* Hide hamburger button by default on large desktop screens */
-.hamburger-btn {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: var(--text-h);
-  padding: 4px 8px;
-}
-
-@media (max-width: 768px) {
-  /* Show hamburger button on phones */
+  /* ---------- HAMBURGER MENU ---------- */
   .hamburger-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--ink);
+    padding: 4px 8px;
   }
-}
+
+  @media (max-width: 768px) {
+    .hamburger-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
