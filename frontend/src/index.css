@@ -158,3 +158,34 @@ code {
     color: var(--accent);
   }
 }
+
+/* ===============================
+   Hamburger Button Mobile Fix
+   =============================== */
+
+/* Hide the hamburger button by default on desktop screens */
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-h);
+  padding: 4px 8px;
+}
+
+@media (max-width: 768px) {
+  /* Ensure nav actions stay aligned properly on mobile */
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Force display the hamburger button on mobile screens */
+  .hamburger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
