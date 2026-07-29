@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logoImage from "../assets/logo.png";
 
 function Navbar() {
     const navigate = useNavigate();
@@ -15,7 +16,7 @@ function Navbar() {
                 {/* <span className="dot"></span> */ }
                 {/* KEYRA COMICS */ }
                 <img 
-                    src={/logo.png} 
+                    src={logoImage} 
                     alt="KEYRA COMICS" 
                     className="site-logo-image" 
                     style={{ height: "40px", width: "auto", display: "block" }} 
