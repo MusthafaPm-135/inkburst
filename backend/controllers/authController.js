@@ -155,9 +155,11 @@ exports.login = (req,res)=>{
 	
 	res.cookie("token", token, {
     		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-		path: "/",
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            path: "/",
+            secure: true,        // Required for cross-domain cookies
+            sameSite: 'none',     // Required for cross-domain cookies
     		maxAge: 7 * 24 * 60 * 60 * 1000
 	});	
 
