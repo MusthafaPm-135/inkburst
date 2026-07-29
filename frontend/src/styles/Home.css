@@ -389,3 +389,23 @@
     .section{ padding-inline:18px; }
     .about-grid{ grid-template-columns:1fr; }
   }
+
+  /* Hide hamburger button by default on large desktop screens */
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-h);
+  padding: 4px 8px;
+}
+
+@media (max-width: 768px) {
+  /* Show hamburger button on phones */
+  .hamburger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
