@@ -398,7 +398,9 @@
       box-shadow:var(--shadow-sm);
     }
     .nav-links.active{ display:flex; }
-    .nav-links a{ padding:12px 0; }
+    .nav-links a{ color:var(--ink); padding:12px 0; }
+    .nav-links a:hover, .nav-links a:focus-visible{ color:var(--ink); }
+    .nav-links .admin-nav-link{ color:var(--paper); }
     .auth-link, .signup-link{ display:none; }
     .hamburger-btn{ display:flex; }
     .section{ padding-inline:18px; }
