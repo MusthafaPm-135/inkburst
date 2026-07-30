@@ -10,21 +10,31 @@ function AdminDashboard() {
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [comics, setComics] = useState([]);
+    const [usersList, setUsersList] = useState([]);
     const [form, setForm] = useState(emptyComic);
     const [files, setFiles] = useState({ cover_image: null, pdf_file: null });
     const [editingId, setEditingId] = useState(null);
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(true);
 
+    const getCoverUrl = (cover) => {
+        if (!cover) return "";
+        if (cover.startsWith("http://") || cover.startsWith("https://")) return cover;
+        if (cover.startsWith("/")) return `${API_ORIGIN}${cover}`;
+        return `${API_ORIGIN}/uploads/covers/${cover}`;
+    };
+
     const loadDashboard = async () => {
         setLoading(true);
         try {
-            const [statsResponse, comicList] = await Promise.all([
+            const [statsResponse, comicList, usersResponse] = await Promise.all([
                 API.get("/admin/stats"),
-                getComics()
+                getComics(),
+                API.get("/admin/users").catch(() => ({ data: { users: [] } }))
             ]);
             setStats(statsResponse.data.stats);
             setComics(comicList);
+            setUsersList(usersResponse.data.users || []);
         } catch (error) {
             setMessage(error.response?.data?.message || "Could not load the admin dashboard.");
         } finally {
@@ -135,9 +145,52 @@ function AdminDashboard() {
 
         <section className="admin-panel"><div className="panel-heading"><div><h2>Your comics</h2><p>{comics.length} currently listed</p></div></div>
             <div className="comic-admin-grid">{comics.map((comic) => <article className="admin-comic" key={comic.id}>
-                <img src={`${API_ORIGIN}/uploads/covers/${comic.cover_image}`} alt="" />
+                <img src={getCoverUrl(comic.cover_image || comic.cover)} alt="" />
                 <div><h3>{comic.title}</h3><p>{comic.author} · ₹{comic.price}</p><div className="comic-actions"><button className="secondary-button" onClick={() => editComic(comic)}>Edit</button><button className="danger-button" onClick={() => deleteComic(comic)}>Delete</button></div></div>
             </article>)}{!loading && comics.length === 0 && <p>No comics have been uploaded yet.</p>}</div>
+        </section>
+
+        <section className="admin-panel">
+            <div className="panel-heading">
+                <div>
+                    <h2>Registered Users</h2>
+                    <p>{usersList.length} user account{usersList.length === 1 ? "" : "s"}</p>
+                </div>
+            </div>
+            {usersList.length === 0 ? (
+                <p>{loading ? "Loading users…" : "No registered users found."}</p>
+            ) : (
+                <div className="admin-users-table-wrap">
+                    <table className="admin-users-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {usersList.map((user) => (
+                                <tr key={user.id}>
+                                    <td className="user-id">#{user.id}</td>
+                                    <td className="user-name"><strong>{user.username}</strong></td>
+                                    <td className="user-email">{user.email}</td>
+                                    <td>
+                                        <span className={`user-badge ${user.role === "admin" ? "badge-admin" : "badge-user"}`}>
+                                            {user.role || "user"}
+                                        </span>
+                                    </td>
+                                    <td className="user-date">
+                                        {user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </section>
     </main>;
 }

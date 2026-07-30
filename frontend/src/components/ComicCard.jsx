@@ -28,13 +28,25 @@ function ComicCard({ comic }) {
             </svg>` )}`;
     };
 
+    const getCoverUrl = (comic) => {
+        const cover = comic.cover_image || comic.cover;
+        if (!cover) return "";
+        if (cover.startsWith("http://") || cover.startsWith("https://")) {
+            return cover;
+        }
+        if (cover.startsWith("/")) {
+            return `${API_ORIGIN}${cover}`;
+        }
+        return `${API_ORIGIN}/uploads/covers/${cover}`;
+    };
+
     return (
 
         <div className="card">
 
             <img
                 className="comic-cover"
-                src={`${API_ORIGIN}/uploads/covers/${comic.cover_image || comic.cover}`}
+                src={getCoverUrl(comic)}
                 alt={comic.title}
                 onError={showCoverFallback}
             />

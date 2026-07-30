@@ -1,11 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import BrandMark from "../components/BrandMark";
+import ComicCard from "../components/ComicCard";
+import { getComics } from "../api/comics";
 import "../styles/Home.css";
 
 function HomeDesign() {
     const location = useLocation();
+    const [comics, setComics] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getComics()
+            .then((data) => setComics(data || []))
+            .catch((err) => console.error("Error fetching comics:", err))
+            .finally(() => setLoading(false));
+    }, []);
 
     useEffect(() => {
         const sectionId = location.hash.slice(1);
@@ -85,13 +96,23 @@ function HomeDesign() {
         <h2>Browse the Stack</h2>
     </div>
 
-    <section className="coming-soon" aria-labelledby="coming-soon-title">
-        <div className="coming-soon-burst" aria-hidden="true">POW!</div>
-        <p className="coming-soon-kicker mono">ISSUE #001 IS IN THE WORKS</p>
-        <h3 id="coming-soon-title">New worlds are<br />coming soon.</h3>
-        <p>Our first original stories are being drawn, inked, and lettered. Join us when the first panels hit the shelf.</p>
-        <span className="coming-soon-stamp mono">STAY TUNED</span>
-    </section>
+    {loading ? (
+        <p className="mono" style={{ textAlign: "center", padding: "40px 0" }}>Loading comics...</p>
+    ) : comics && comics.length > 0 ? (
+        <div className="grid">
+            {comics.map((comic) => (
+                <ComicCard key={comic.id} comic={comic} />
+            ))}
+        </div>
+    ) : (
+        <section className="coming-soon" aria-labelledby="coming-soon-title">
+            <div className="coming-soon-burst" aria-hidden="true">POW!</div>
+            <p className="coming-soon-kicker mono">ISSUE #001 IS IN THE WORKS</p>
+            <h3 id="coming-soon-title">New worlds are<br />coming soon.</h3>
+            <p>Our first original stories are being drawn, inked, and lettered. Join us when the first panels hit the shelf.</p>
+            <span className="coming-soon-stamp mono">STAY TUNED</span>
+        </section>
+    )}
 
 </section>
 <section className="section" id="how">

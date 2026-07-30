@@ -154,6 +154,31 @@ router.get("/stats", (req, res) => {
 });
 
 // =============================
+// Registered Users List
+// =============================
+router.get("/users", (req, res) => {
+    db.query(
+        "SELECT id, username, email, role, created_at FROM users ORDER BY id DESC",
+        (err, users) => {
+            if (err) {
+                // Fallback if created_at column is absent
+                db.query(
+                    "SELECT id, username, email, role FROM users ORDER BY id DESC",
+                    (fallbackErr, fallbackUsers) => {
+                        if (fallbackErr) {
+                            return res.status(500).json({ success: false, error: fallbackErr.message });
+                        }
+                        return res.json({ success: true, users: fallbackUsers });
+                    }
+                );
+                return;
+            }
+            res.json({ success: true, users });
+        }
+    );
+});
+
+// =============================
 // Upload Comic
 // =============================
 router.post(
