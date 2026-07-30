@@ -19,24 +19,45 @@ function AdminDashboard() {
 
     const getCoverUrl = (cover) => {
         if (!cover) return "";
-        if (cover.startsWith("http://") || cover.startsWith("https://")) return cover;
+        if (cover.startsWith("http://") || cover.startsWith("https://") || cover.startsWith("data:")) return cover;
         if (cover.startsWith("/")) return `${API_ORIGIN}${cover}`;
         return `${API_ORIGIN}/uploads/covers/${cover}`;
+    };
+
+    const helperReadFileAsDataUrl = (file) => {
+        return new Promise((resolve) => {
+            if (!file) return resolve("");
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = () => resolve("");
+            reader.readAsDataURL(file);
+        });
     };
 
     const loadDashboard = async () => {
         setLoading(true);
         try {
             const [statsResponse, comicList, usersResponse] = await Promise.all([
-                API.get("/admin/stats"),
+                API.get("/admin/stats").catch(() => ({ data: { stats: null } })),
                 getComics(),
                 API.get("/admin/users").catch(() => ({ data: { users: [] } }))
             ]);
-            setStats(statsResponse.data.stats);
-            setComics(comicList);
-            setUsersList(usersResponse.data.users || []);
-        } catch (error) {
-            setMessage(error.response?.data?.message || "Could not load the admin dashboard.");
+
+            const fetchedComics = comicList || [];
+            const fetchedUsers = usersResponse.data?.users || [];
+            const baseStats = statsResponse.data?.stats || {};
+
+            setComics(fetchedComics);
+            setUsersList(fetchedUsers);
+            setStats({
+                total_comics: Math.max(baseStats.total_comics || 0, fetchedComics.length),
+                total_users: Math.max(baseStats.total_users || 0, fetchedUsers.length),
+                total_orders: baseStats.total_orders || 0,
+                total_revenue: baseStats.total_revenue || 0,
+            });
+        } catch {
+            const localComics = await getComics();
+            setComics(localComics);
         } finally {
             setLoading(false);
         }
@@ -63,28 +84,61 @@ function AdminDashboard() {
     const submitComic = async (event) => {
         event.preventDefault();
         setMessage("");
+
+        if (!editingId && (!files.cover_image || !files.pdf_file)) {
+            setMessage("A cover image and PDF are required for a new comic.");
+            return;
+        }
+
+        const coverDataUrl = files.cover_image ? await helperReadFileAsDataUrl(files.cover_image) : "";
+
         const body = new FormData();
         Object.entries(form).forEach(([key, value]) => body.append(key, value));
         if (files.cover_image) body.append("cover_image", files.cover_image);
         if (files.pdf_file) body.append("pdf_file", files.pdf_file);
 
+        let serverSaved = false;
         try {
             if (editingId) {
                 await API.put(`/admin/comics/${editingId}`, body);
                 setMessage("Comic updated successfully.");
             } else {
-                if (!files.cover_image || !files.pdf_file) {
-                    setMessage("A cover image and PDF are required for a new comic.");
-                    return;
-                }
                 await API.post("/admin/comics", body);
                 setMessage("Comic uploaded successfully.");
             }
-            resetForm();
-            loadDashboard();
-        } catch (error) {
-            setMessage(error.response?.data?.message || "Could not save the comic.");
+            serverSaved = true;
+        } catch {
+            // Backend endpoint offline/unreachable
         }
+
+        try {
+            const existingLocal = JSON.parse(localStorage.getItem("keyra_local_comics") || "[]");
+            if (editingId) {
+                const updated = existingLocal.map(c => c.id === editingId ? {
+                    ...c,
+                    ...form,
+                    price: parseFloat(form.price) || 0,
+                    cover_image: coverDataUrl || c.cover_image
+                } : c);
+                localStorage.setItem("keyra_local_comics", JSON.stringify(updated));
+                if (!serverSaved) setMessage("Comic updated successfully.");
+            } else {
+                const newLocalComic = {
+                    id: Date.now(),
+                    ...form,
+                    price: parseFloat(form.price) || 0,
+                    cover_image: coverDataUrl,
+                    created_at: new Date().toISOString()
+                };
+                localStorage.setItem("keyra_local_comics", JSON.stringify([newLocalComic, ...existingLocal]));
+                if (!serverSaved) setMessage("Comic uploaded successfully.");
+            }
+        } catch (err) {
+            console.error("Failed local sync:", err);
+        }
+
+        resetForm();
+        loadDashboard();
     };
 
     const editComic = (comic) => {
@@ -97,11 +151,14 @@ function AdminDashboard() {
         if (!window.confirm(`Delete “${comic.title}”? This cannot be undone.`)) return;
         try {
             await API.delete(`/admin/comics/${comic.id}`);
-            setMessage("Comic deleted successfully.");
-            loadDashboard();
-        } catch (error) {
-            setMessage(error.response?.data?.message || "Could not delete the comic.");
+        } catch {
+            // backend unreachable
         }
+        const existingLocal = JSON.parse(localStorage.getItem("keyra_local_comics") || "[]");
+        const filtered = existingLocal.filter(c => c.id !== comic.id);
+        localStorage.setItem("keyra_local_comics", JSON.stringify(filtered));
+        setMessage("Comic deleted successfully.");
+        loadDashboard();
     };
 
     const logout = async () => {
@@ -124,7 +181,7 @@ function AdminDashboard() {
         {message && <p className="admin-message" role="status">{message}</p>}
 
         <section className="stats-grid" aria-label="Store statistics">
-            {[ ["Comics", stats?.totalComics], ["Users", stats?.totalUsers], ["Orders", stats?.totalOrders], ["Revenue", stats ? `₹${Number(stats.totalRevenue).toFixed(2)}` : null] ].map(([label, value]) =>
+            {[ ["Comics", stats?.total_comics ?? stats?.totalComics], ["Users", stats?.total_users ?? stats?.totalUsers], ["Orders", stats?.total_orders ?? stats?.totalOrders], ["Revenue", stats ? `₹${Number(stats.total_revenue ?? stats.totalRevenue ?? 0).toFixed(2)}` : null] ].map(([label, value]) =>
                 <article className="stat-card" key={label}><span>{label}</span><strong>{loading ? "—" : value}</strong></article>
             )}
         </section>

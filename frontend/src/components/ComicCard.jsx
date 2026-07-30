@@ -31,7 +31,7 @@ function ComicCard({ comic }) {
     const getCoverUrl = (comic) => {
         const cover = comic.cover_image || comic.cover;
         if (!cover) return "";
-        if (cover.startsWith("http://") || cover.startsWith("https://")) {
+        if (cover.startsWith("http://") || cover.startsWith("https://") || cover.startsWith("data:")) {
             return cover;
         }
         if (cover.startsWith("/")) {
