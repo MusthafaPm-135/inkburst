@@ -153,7 +153,7 @@ function HomeDesign() {
     <a href="/" className="logo brand-link"><BrandMark /></a>
 
     <div className="mono">
-        © 2026 Inkburst Digital Comics
+        © 2026 Keyra Digital Comics
     </div>
 
 </footer>
