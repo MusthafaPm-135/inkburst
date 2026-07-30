@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const db = require("../config/db");
+const cloudinary = require("../config/cloudinary");
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
 
@@ -72,6 +73,17 @@ const validateComicDetails = ({ title, author, genre, price, description }) => {
 
     return null;
 };
+
+const uploadCoverToCloudinary = async (file) => {
+    const result = await cloudinary.uploader.upload(file.path, {
+        folder: "keyra-comics/covers",
+        resource_type: "image"
+    });
+    fs.unlink(file.path, () => {});
+    return result.secure_url;
+};
+
+const isRemoteUrl = (value) => /^https?:\/\//i.test(value || "");
 
 // =============================
 // Test Route
@@ -187,8 +199,14 @@ router.post(
             });
         }
 
-        const coverImage = req.files.cover_image[0].filename;
+        let coverImage;
         const pdfFile = req.files.pdf_file[0].filename;
+
+        try {
+            coverImage = await uploadCoverToCloudinary(req.files.cover_image[0]);
+        } catch (error) {
+            return res.status(500).json({ success: false, message: "Could not upload the cover image." });
+        }
 
         console.log("BEFORE INSERT");
 
@@ -264,7 +282,7 @@ router.put(
         { name: "cover_image", maxCount: 1 },
         { name: "pdf_file", maxCount: 1 }
     ]),
-    (req, res) => {
+    async (req, res) => {
         const { title, author, genre, price, description } = req.body;
 
         const validationError = validateComicDetails(req.body);
