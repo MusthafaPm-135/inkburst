@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 140" width="360" height="140">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Bangers&amp;display=swap');
+      .logo-bg { fill: #ED1C24; rx: 8px; }
+      .logo-text {
+        fill: #FFFFFF;
+        font-family: 'Bangers', 'Impact', 'Arial Black', sans-serif;
+        font-size: 110px;
+        font-weight: 900;
+        text-anchor: middle;
+        dominant-baseline: central;
+        letter-spacing: 1px;
+      }
+    </style>
+  </defs>
+  <rect class="logo-bg" x="0" y="0" width="360" height="140" rx="8" />
+  <text class="logo-text" x="180" y="70">KEYRA</text>
+</svg>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logoImage from "../assets/logo.png";
+import BrandMark from "./BrandMark";
 
 function Navbar() {
     const navigate = useNavigate();
@@ -12,15 +12,8 @@ function Navbar() {
 
     return (
         <nav className="nav">
-            <a href="/" className="logo">
-                {/* <span className="dot"></span> */ }
-                {/* KEYRA COMICS */ }
-                <img 
-                    src={logoImage} 
-                    alt="KEYRA COMICS" 
-                    className="site-logo-image" 
-                    style={{ height: "40px", width: "auto", display: "block" }} 
-                />
+            <a href="/" className="logo brand-link">
+                <BrandMark height="40px" />
             </a>
 
             <div className={`nav-links ${isOpen ? "active" : ""}`}>

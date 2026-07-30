@@ -1,5 +1,14 @@
-function BrandMark() {
-    return <span className="brand-mark" aria-label="Keyra Comics"><span>KEYRA</span><span>COMICS</span></span>;
+import logoSvg from "../assets/logo.svg";
+
+function BrandMark({ height = "40px", className = "" }) {
+    return (
+        <img 
+            src={logoSvg} 
+            alt="KEYRA" 
+            className={`brand-mark-logo ${className}`}
+            style={{ height: height, width: "auto", display: "block", objectFit: "contain" }} 
+        />
+    );
 }
 
 export default BrandMark;
