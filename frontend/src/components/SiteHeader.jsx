@@ -7,6 +7,7 @@ function SiteHeader() {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem("user") || "null");
     const [cartCount, setCartCount] = useState(0);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     useEffect(() => {
         if (!user) return;
@@ -20,12 +21,22 @@ function SiteHeader() {
         navigate("/");
     };
 
+    const closeMenu = () => setIsMenuOpen(false);
+
     return <nav className="nav">
         <Link to="/" className="logo brand-link"><BrandMark /></Link>
-        <div className="nav-links"><Link to="/#browse">Browse</Link><Link to="/#how">How it works</Link><Link to="/#about">About</Link>{user?.role === "admin" && <Link className="admin-nav-link" to="/admin">Admin</Link>}</div>
+        <div className={`nav-links ${isMenuOpen ? "active" : ""}`} id="site-navigation">
+            <Link to="/#browse" onClick={closeMenu}>Browse</Link>
+            <Link to="/#how" onClick={closeMenu}>How it works</Link>
+            <Link to="/#about" onClick={closeMenu}>About</Link>
+            {user?.role === "admin" && <Link className="admin-nav-link" to="/admin" onClick={closeMenu}>Admin</Link>}
+        </div>
         <div className="nav-actions">
             {user ? <><Link className="auth-link" to="/library">Library</Link><button className="auth-link auth-button" onClick={logout}>Log out</button></> : <><Link className="auth-link" to="/login">Log in</Link><Link className="signup-link" to="/register">Sign up</Link></>}
             <Link className="cart-btn" to="/cart"><span aria-hidden="true">🛒</span><span>Cart</span><span className="cart-count mono">{cartCount}</span></Link>
+            <button className="hamburger-btn" type="button" aria-label="Toggle navigation menu" aria-controls="site-navigation" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>
+                <span aria-hidden="true">{isMenuOpen ? "×" : "☰"}</span>
+            </button>
         </div>
     </nav>;
 }

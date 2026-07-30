@@ -104,7 +104,10 @@ function AdminDashboard() {
     return <main className="admin-page">
         <header className="admin-header">
             <div><a href="/" className="admin-logo">KEYRA COMICS</a><p>Admin control room</p></div>
-            <button className="secondary-button" onClick={logout}>Log out</button>
+            <div className="admin-header-actions">
+                <a className="secondary-button" href="/">Return to homepage</a>
+                <button className="secondary-button" onClick={logout}>Log out</button>
+            </div>
         </header>
 
         <section className="admin-intro"><h1>Manage your comic shelf</h1><p>Upload, update, and remove comics from one place.</p></section>
