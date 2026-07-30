@@ -85,14 +85,6 @@ function HomeDesign() {
         <h2>Browse the Stack</h2>
     </div>
 
-    <section className="coming-soon" aria-labelledby="coming-soon-title">
-        <div className="coming-soon-burst" aria-hidden="true">POW!</div>
-        <p className="coming-soon-kicker mono">ISSUE #001 IS IN THE WORKS</p>
-        <h3 id="coming-soon-title">New worlds are<br />coming soon.</h3>
-        <p>Our first original stories are being drawn, inked, and lettered. Join us when the first panels hit the shelf.</p>
-        <span className="coming-soon-stamp mono">STAY TUNED</span>
-    </section>
-
 </section>
 <section className="section" id="how">
 
