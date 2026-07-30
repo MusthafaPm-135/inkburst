@@ -1,29 +1,20 @@
-import { useEffect, useState } from "react";
-import { getComics } from "../api/comics";
-import ComicCard from "../components/ComicCard";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader";
 import BrandMark from "../components/BrandMark";
 import "../styles/Home.css";
 
 function HomeDesign() {
-    const [comics, setComics] = useState([]);
-    const [activeGenre, setActiveGenre] = useState("All");
+    const location = useLocation();
 
     useEffect(() => {
-        loadComics();
-    }, []);
+        const sectionId = location.hash.slice(1);
+        if (!sectionId) return;
 
-    const loadComics = async () => {
-        try {
-            const data = await getComics();
-            setComics(data);
-        } catch (err) {
-            console.log(err);
-        }
-    };
-
-    const genres = ["All", ...new Set(comics.map((comic) => comic.genre).filter(Boolean))];
-    const visibleComics = activeGenre === "All" ? comics : comics.filter((comic) => comic.genre === activeGenre);
+        requestAnimationFrame(() => {
+            document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+        });
+    }, [location.hash]);
 
     return (
         <>
@@ -92,25 +83,15 @@ function HomeDesign() {
 
     <div className="section-head">
         <h2>Browse the Stack</h2>
-        <div className="filters" aria-label="Filter comics by genre">
-            {genres.map((genre) => <button key={genre} className={`chip ${activeGenre === genre ? "active" : ""}`} onClick={() => setActiveGenre(genre)}>{genre}</button>)}
-        </div>
     </div>
 
-    <div className="grid">
-
-    {visibleComics.map((comic) => (
-
-        <ComicCard
-            key={comic.id}
-            comic={comic}
-        />
-
-    ))}
-
-    {visibleComics.length === 0 && <p className="browse-empty">No comics in this category yet.</p>}
-
-</div>
+    <section className="coming-soon" aria-labelledby="coming-soon-title">
+        <div className="coming-soon-burst" aria-hidden="true">POW!</div>
+        <p className="coming-soon-kicker mono">ISSUE #001 IS IN THE WORKS</p>
+        <h3 id="coming-soon-title">New worlds are<br />coming soon.</h3>
+        <p>Our first original stories are being drawn, inked, and lettered. Join us when the first panels hit the shelf.</p>
+        <span className="coming-soon-stamp mono">STAY TUNED</span>
+    </section>
 
 </section>
 <section className="section" id="how">

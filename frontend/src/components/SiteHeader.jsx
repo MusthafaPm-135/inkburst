@@ -1,10 +1,11 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import API from "../api/axios";
 import BrandMark from "./BrandMark";
 
 function SiteHeader() {
     const navigate = useNavigate();
+    const location = useLocation();
     const user = JSON.parse(localStorage.getItem("user") || "null");
     const [cartCount, setCartCount] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,13 +23,21 @@ function SiteHeader() {
     };
 
     const closeMenu = () => setIsMenuOpen(false);
+    const goToSection = (section) => {
+        closeMenu();
+        if (location.pathname === "/") {
+            document.getElementById(section)?.scrollIntoView({ behavior: "smooth" });
+            return;
+        }
+        navigate(`/#${section}`);
+    };
 
     return <nav className="nav">
         <Link to="/" className="logo brand-link"><BrandMark /></Link>
         <div className={`nav-links ${isMenuOpen ? "active" : ""}`} id="site-navigation">
-            <Link to="/#browse" onClick={closeMenu}>Browse</Link>
-            <Link to="/#how" onClick={closeMenu}>How it works</Link>
-            <Link to="/#about" onClick={closeMenu}>About</Link>
+            <button className="nav-section-link" type="button" onClick={() => goToSection("browse")}>Browse</button>
+            <button className="nav-section-link" type="button" onClick={() => goToSection("how")}>How it works</button>
+            <button className="nav-section-link" type="button" onClick={() => goToSection("about")}>About</button>
             {user?.role === "admin" && <Link className="admin-nav-link" to="/admin" onClick={closeMenu}>Admin</Link>}
         </div>
         <div className="nav-actions">

@@ -14,7 +14,7 @@ exports.addToCart = (req, res) => {
         if (lookupErr) return res.status(500).json({ success: false, message: "Could not update cart" });
         if (existing.length) return res.json({ success: true, message: "Comic is already in your cart" });
         db.query(
-            "INSERT INTO cart(user_id, comic_id, quantity) VALUES(?, ?, 1)",
+            "INSERT INTO cart(user_id, comic_id) VALUES(?, ?)",
             [userId, comicId],
             (err, result) => {
 
@@ -24,7 +24,8 @@ exports.addToCart = (req, res) => {
             if (err) {
                 return res.status(500).json({
                     success: false,
-                    error: err
+                    message: "Could not add this comic to your cart.",
+                    error: err.message
                 });
             }
 
@@ -47,7 +48,7 @@ exports.getCart = (req, res) => {
     const sql = `
         SELECT
             cart.id,
-            COALESCE(cart.quantity, 1) AS quantity,
+            1 AS quantity,
             comics.id AS comic_id,
             comics.title,
             comics.author,
