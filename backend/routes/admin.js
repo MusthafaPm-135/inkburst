@@ -199,14 +199,13 @@ router.post(
         console.log("BODY:", req.body);
         console.log("FILES:", req.files);
 
-        // Read form data FIRST
         const {
-    title,
-    author,
-    genre,
-    price,
-    description
-} = req.body;
+            title,
+            author,
+            genre,
+            price,
+            description
+        } = req.body;
 
         const validationError = validateComicDetails(req.body);
         if (validationError) {
@@ -233,47 +232,36 @@ router.post(
             return res.status(500).json({ success: false, message: "Could not upload the cover image." });
         }
 
-        console.log("BEFORE INSERT");
-
         db.query(
             `
             INSERT INTO comics
-(title, author, genre, price, cover_image, pdf_file, description)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+            (title, author, genre, price, cover_image, pdf_file, description)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             `,
             [
-    title,
-    author,
-    genre,
-    price,
-    coverImage,
-    pdfFile,
-    description
-],
+                title,
+                author,
+                genre,
+                price,
+                coverImage,
+                pdfFile,
+                description
+            ],
             (err, result) => {
-
-                console.log("INSIDE CALLBACK");
-
                 if (err) {
-                    console.log("INSERT ERROR:", err);
-
                     return res.status(500).json({
                         success: false,
                         error: err.message
                     });
                 }
 
-                console.log("INSERT SUCCESS:", result);
-
                 res.json({
                     success: true,
                     message: "Comic uploaded successfully",
                     insertId: result.insertId
                 });
-
             }
         );
-
     }
 );
 // =============================
