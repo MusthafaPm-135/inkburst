@@ -193,7 +193,7 @@ router.post(
             maxCount: 1
         }
     ]),
-    (req, res) => {
+    async (req, res) => { // <-- ADD async HERE
 
         console.log("UPLOAD ROUTE REACHED");
         console.log("BODY:", req.body);
@@ -276,7 +276,6 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
 
     }
 );
-
 // =============================
 // View Comic PDF (admin only)
 // =============================
