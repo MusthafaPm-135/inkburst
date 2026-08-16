@@ -111,7 +111,9 @@ function AdminDashboard() {
             // Backend endpoint offline/unreachable
         }
 
-        try {
+        // Keep a local catalogue only as an offline fallback. When the API
+        // accepts the upload, its record is the single source of truth.
+        if (!serverSaved) try {
             const existingLocal = JSON.parse(localStorage.getItem("keyra_local_comics") || "[]");
             if (editingId) {
                 const updated = existingLocal.map(c => c.id === editingId ? {
