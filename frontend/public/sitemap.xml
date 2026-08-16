@@ -6,15 +6,23 @@
   </url>
 
   <url>
+    <loc>https://keyracomics.vercel.app/admin</loc>
+  </url>
+
+  <url>
+    <loc>https://keyracomics.vercel.app/auth</loc>
+  </url>
+
+  <url>
+    <loc>https://keyracomics.vercel.app/cart</loc>
+  </url>
+  
+  <url>
     <loc>https://keyracomics.vercel.app/comics</loc>
   </url>
 
   <url>
-    <loc>https://keyracomics.vercel.app/about</loc>
-  </url>
-
-  <url>
-    <loc>https://keyracomics.vercel.app/contact</loc>
+    <loc>https://keyracomics.vercel.app/orders</loc>
   </url>
 
 </urlset>
