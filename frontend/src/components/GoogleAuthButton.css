@@ -1,0 +1,10 @@
+.google-auth-button {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px 18px; border: 3px solid var(--ink); background: #fff; color: var(--ink);
+  font: inherit; font-weight: 800; text-transform: uppercase; box-shadow: var(--shadow-sm);
+}
+.google-auth-button:hover { background: var(--yellow); }
+.google-auth-icon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #4285f4; color: #fff; font: 900 15px Arial, sans-serif; }
+.auth-divider { display: flex; align-items: center; gap: 10px; margin: 20px 0; color: var(--ink-soft); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.auth-divider::before, .auth-divider::after { content: ""; height: 2px; flex: 1; background: var(--ink); }
+.auth-divider span { white-space: nowrap; }

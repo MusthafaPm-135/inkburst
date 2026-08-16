@@ -69,6 +69,7 @@
     display:inline-block; border:2px solid var(--ink);
   }
   .nav-links{ display:flex; gap: 26px; align-items:center; }
+  .mobile-auth-link{ display:none; }
   .nav-links a, .nav-section-link{
     text-decoration:none; font-weight:700; font-size:14px;
     text-transform:uppercase; letter-spacing:0.06em;
@@ -414,6 +415,7 @@
       box-shadow:var(--shadow-sm);
     }
     .nav-links.active{ display:flex; }
+    .nav-links .mobile-auth-link{ display:block; }
     .nav-links a, .nav-section-link{ color:var(--ink); padding:12px 0; text-align:left; }
     .nav-links a:hover, .nav-links a:focus-visible, .nav-section-link:hover, .nav-section-link:focus-visible{ color:var(--ink); }
     .nav-links .admin-nav-link{ color:var(--paper); }

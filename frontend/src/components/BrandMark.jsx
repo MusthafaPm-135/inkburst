@@ -1,10 +1,8 @@
-import logoSvg from "../assets/logo.svg";
-
 function BrandMark({ height = "40px", className = "" }) {
     return (
-        <img 
-            src={logoSvg} 
-            alt="KEYRA" 
+        <img
+            src="/keyra-site-logo.png"
+            alt="Keyra Comics"
             className={`brand-mark-logo ${className}`}
             style={{ height: height, width: "auto", display: "block", objectFit: "contain" }} 
         />

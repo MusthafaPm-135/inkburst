@@ -38,6 +38,7 @@ function SiteHeader() {
             <button className="nav-section-link" type="button" onClick={() => goToSection("browse")}>Browse</button>
             <button className="nav-section-link" type="button" onClick={() => goToSection("how")}>How it works</button>
             <button className="nav-section-link" type="button" onClick={() => goToSection("about")}>About</button>
+            {!user && <Link className="mobile-auth-link" to="/login" onClick={closeMenu}>Log in</Link>}
             {user?.role === "admin" && <Link className="admin-nav-link" to="/admin" onClick={closeMenu}>Admin</Link>}
         </div>
         <div className="nav-actions">

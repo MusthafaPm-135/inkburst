@@ -7,6 +7,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Library from "./pages/Library";
 import AdminDashboard from "./pages/AdminDashboard";
+import GoogleAuthCallback from "./pages/GoogleAuthCallback";
 import AdminRoute from "./components/AdminRoute";
 import RequireAuth from "./components/RequireAuth";
 
@@ -20,6 +21,8 @@ function App() {
                 <Route path="/login" element={<Login />} />
 
                 <Route path="/register" element={<Register />} />
+
+                <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
 
                 <Route element={<RequireAuth />}>
                     <Route path="/cart" element={<Cart />} />
