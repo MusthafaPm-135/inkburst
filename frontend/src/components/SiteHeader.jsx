@@ -19,6 +19,7 @@ function SiteHeader() {
         try { await API.post("/auth/logout"); } catch { /* local session is cleared either way */ }
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        closeMenu();
         navigate("/");
     };
 
@@ -38,7 +39,8 @@ function SiteHeader() {
             <button className="nav-section-link" type="button" onClick={() => goToSection("browse")}>Browse</button>
             <button className="nav-section-link" type="button" onClick={() => goToSection("how")}>How it works</button>
             <button className="nav-section-link" type="button" onClick={() => goToSection("about")}>About</button>
-            {!user && <Link className="mobile-auth-link" to="/login" onClick={closeMenu}>Log in</Link>}
+            {!user && <><Link className="mobile-auth-link" to="/login" onClick={closeMenu}>Log in</Link><Link className="mobile-auth-link mobile-signup-link" to="/register" onClick={closeMenu}>Sign up</Link></>}
+            {user && <button className="nav-section-link mobile-auth-link" type="button" onClick={logout}>Log out</button>}
             {user?.role === "admin" && <Link className="admin-nav-link" to="/admin" onClick={closeMenu}>Admin</Link>}
         </div>
         <div className="nav-actions">
