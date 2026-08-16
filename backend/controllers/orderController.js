@@ -1,5 +1,23 @@
 const db = require("../config/db");
 const path = require("path");
+const crypto = require("crypto");
+const Razorpay = require("razorpay");
+
+const getRazorpay = () => {
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) return null;
+    return new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
+};
+
+const query = (sql, values = []) => new Promise((resolve, reject) => {
+    db.query(sql, values, (error, results) => error ? reject(error) : resolve(results));
+});
+
+const getCartItems = (userId) => query(
+    `SELECT cart.comic_id, comics.price
+     FROM cart JOIN comics ON cart.comic_id = comics.id
+     WHERE cart.user_id = ?`,
+    [userId]
+);
 
 console.log("✅ USING orderController.js - UPDATED VERSION");
 
@@ -7,8 +25,95 @@ console.log("✅ USING orderController.js - UPDATED VERSION");
 // CHECKOUT
 // ==========================================
 exports.checkout = (req, res) => {
+    return res.status(410).json({
+        success: false,
+        message: "Use the secure payment flow to complete your order."
+    });
+};
 
-    console.log("========== CHECKOUT ==========");
+// Create the Razorpay order on the server, using prices from the database.
+// Never accept a total sent by the browser.
+exports.createPayment = async (req, res) => {
+    const razorpay = getRazorpay();
+    if (!razorpay) {
+        return res.status(503).json({ success: false, message: "Payments are not configured yet. Add Razorpay keys on the server." });
+    }
+
+    try {
+        const cartItems = await getCartItems(req.user.id);
+        if (!cartItems.length) return res.status(400).json({ success: false, message: "Your cart is empty." });
+
+        const amount = Math.round(cartItems.reduce((sum, item) => sum + Number(item.price), 0) * 100);
+        if (amount < 100) return res.status(400).json({ success: false, message: "The order total must be at least ₹1.00." });
+
+        const order = await razorpay.orders.create({
+            amount,
+            currency: "INR",
+            receipt: `keyra_${req.user.id}_${Date.now()}`,
+            notes: { user_id: String(req.user.id) }
+        });
+        return res.json({ success: true, key: process.env.RAZORPAY_KEY_ID, order, itemCount: cartItems.length });
+    } catch (error) {
+        console.error("Razorpay order creation failed:", error);
+        return res.status(500).json({ success: false, message: "Could not start the payment. Please try again." });
+    }
+};
+
+// Verify Razorpay's HMAC signature before unlocking comics. This endpoint is
+// the only path that creates Paid orders.
+exports.verifyPayment = async (req, res) => {
+    const razorpay = getRazorpay();
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
+    if (!razorpay || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+        return res.status(400).json({ success: false, message: "Payment verification details are missing." });
+    }
+
+    const expected = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`).digest("hex");
+    if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(razorpay_signature))) {
+        return res.status(400).json({ success: false, message: "Payment signature is invalid." });
+    }
+
+    try {
+        const paymentOrder = await razorpay.orders.fetch(razorpay_order_id);
+        if (String(paymentOrder.notes?.user_id) !== String(req.user.id) || paymentOrder.status !== "paid") {
+            return res.status(400).json({ success: false, message: "This payment cannot be used for this account." });
+        }
+
+        const cartItems = await getCartItems(req.user.id);
+        if (!cartItems.length) return res.json({ success: true, message: "Your purchase is already available in your library." });
+        const totalInPaise = Math.round(cartItems.reduce((sum, item) => sum + Number(item.price), 0) * 100);
+        if (totalInPaise !== paymentOrder.amount) {
+            return res.status(409).json({ success: false, message: "Your cart changed while payment was in progress. Please contact support with your payment ID." });
+        }
+
+        const connection = await db.promise().getConnection();
+        try {
+            await connection.beginTransaction();
+            for (const item of cartItems) {
+                await connection.query(
+                    `INSERT INTO orders (user_id, comic_id, price, payment_status)
+                     SELECT ?, ?, ?, 'Paid' WHERE NOT EXISTS
+                     (SELECT 1 FROM orders WHERE user_id = ? AND comic_id = ? AND payment_status = 'Paid')`,
+                    [req.user.id, item.comic_id, item.price, req.user.id, item.comic_id]
+                );
+            }
+            await connection.query("DELETE FROM cart WHERE user_id = ?", [req.user.id]);
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+        return res.json({ success: true, message: "Payment verified. Your comics are now in your library." });
+    } catch (error) {
+        console.error("Payment verification failed:", error);
+        return res.status(500).json({ success: false, message: "We could not finish your order. Please contact support with your payment ID." });
+    }
+};
+
+/*
 
     const userId = req.user.id;
 
@@ -99,8 +204,7 @@ exports.checkout = (req, res) => {
 
         }
     );
-
-};
+*/
 
 // ==========================================
 // GET MY ORDERS
@@ -123,8 +227,9 @@ exports.getOrders = (req, res) => {
         FROM orders
         JOIN comics
         ON orders.comic_id = comics.id
-        WHERE orders.user_id = ?
-        ORDER BY orders.purchased_at DESC`,
+         WHERE orders.user_id = ?
+         AND orders.payment_status = 'Paid'
+         ORDER BY orders.purchased_at DESC`,
         [userId],
         (err, orders) => {
 
@@ -166,7 +271,8 @@ exports.readComic = (req, res) => {
          JOIN comics
          ON orders.comic_id = comics.id
          WHERE orders.user_id = ?
-         AND orders.comic_id = ?`,
+         AND orders.comic_id = ?
+         AND orders.payment_status = 'Paid'`,
         [userId, comicId],
         (err, result) => {
 

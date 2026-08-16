@@ -15,9 +15,14 @@ const comicRoutes = require("./routes/comics");
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const auth = require("./middleware/auth");
+const { securityHeaders } = require("./middleware/security");
 
 // Create Express app
 const app = express();
+
+if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET must be configured before the server can start.");
+}
 
 // Render sits behind a proxy; this keeps secure production cookies working.
 app.set("trust proxy", 1);
@@ -34,13 +39,16 @@ const allowedOrigins = [
 
 
 app.use(cors({
-  // Change this to your exact new frontend URL
-  origin: "https://keyracomics.vercel.app", 
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || origin === "https://keyracomics.vercel.app") return callback(null, true);
+    return callback(new Error("Origin not allowed by CORS"));
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
 }));
 
-app.use(express.json());
+app.use(securityHeaders);
+app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 
 

@@ -10,9 +10,15 @@ exports.addToCart = (req, res) => {
     const userId = req.user.id;
     const { comicId } = req.body;
 
-    db.query("SELECT id FROM cart WHERE user_id = ? AND comic_id = ?", [userId, comicId], (lookupErr, existing) => {
+    if (!Number.isInteger(Number(comicId))) {
+        return res.status(400).json({ success: false, message: "Choose a valid comic." });
+    }
+
+    db.query(`SELECT id FROM cart WHERE user_id = ? AND comic_id = ?
+              UNION ALL
+              SELECT id FROM orders WHERE user_id = ? AND comic_id = ? AND payment_status = 'Paid'`, [userId, comicId, userId, comicId], (lookupErr, existing) => {
         if (lookupErr) return res.status(500).json({ success: false, message: "Could not update cart" });
-        if (existing.length) return res.json({ success: true, message: "Comic is already in your cart" });
+        if (existing.length) return res.json({ success: true, message: "This comic is already in your cart or library" });
         db.query(
             "INSERT INTO cart(user_id, comic_id) VALUES(?, ?)",
             [userId, comicId],

@@ -1,6 +1,35 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
+const crypto = require("crypto");
+
+const oauthStates = new Map();
+const oauthCodes = new Map();
+const query = (sql, values = []) => new Promise((resolve, reject) => {
+    db.query(sql, values, (error, results) => error ? reject(error) : resolve(results));
+});
+const frontendUrl = () => (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+const googleRedirectUri = () => `${(process.env.BACKEND_URL || "http://localhost:5000").replace(/\/$/, "")}/api/auth/google/callback`;
+const pruneOAuthStore = (store) => {
+    const now = Date.now();
+    for (const [key, value] of store.entries()) if (value.expiresAt < now) store.delete(key);
+};
+const publicUser = (user) => ({ id: user.id, username: user.username, email: user.email, role: user.role || "user" });
+const createToken = (user) => jwt.sign({ id: user.id, email: user.email, role: user.role || "user" }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+const findOrCreateGoogleUser = async (profile) => {
+    const email = profile.email.trim().toLowerCase();
+    const existing = await query("SELECT id, username, email, role FROM users WHERE email = ?", [email]);
+    if (existing.length) return existing[0];
+
+    const baseName = (profile.name || email.split("@")[0]).replace(/[^a-zA-Z0-9 _-]/g, "").trim().slice(0, 40) || "Keyra reader";
+    const username = `${baseName.slice(0, 34)} ${crypto.randomBytes(3).toString("hex")}`;
+    // Password stays unusable; this account authenticates through Google.
+    const password = await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 10);
+    const result = await query("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", [username, email, password]);
+    const users = await query("SELECT id, username, email, role FROM users WHERE id = ?", [result.insertId]);
+    return users[0];
+};
 
 // ===============================
 // REGISTER USER
@@ -24,10 +53,10 @@ exports.register = async (req, res) => {
         });
     }
 
-    if (password.length < 6) {
+    if (password.length < 12 || password.length > 64) {
         return res.status(400).json({ 
             success: false, 
-            message: "Password must be at least 6 characters" 
+            message: "Password must be 12 to 64 characters" 
         });
     }
 
@@ -105,16 +134,14 @@ exports.login = (req, res) => {
         [email.trim().toLowerCase()],
         async (err, result) => {
             if (err) {
-                return res.status(500).json({
-                    success: false,
-                    error: err.message || err
-                });
+                console.error("LOGIN ERROR:", err.message);
+                return res.status(500).json({ success: false, message: "Login is temporarily unavailable" });
             }
 
             if (result.length === 0) {
-                return res.status(404).json({
+                return res.status(401).json({
                     success: false,
-                    message: "User not found"
+                    message: "Invalid email or password"
                 });
             }
 
@@ -125,7 +152,7 @@ exports.login = (req, res) => {
             if (!passwordMatch) {
                 return res.status(401).json({
                     success: false,
-                    message: "Incorrect password"
+                    message: "Invalid email or password"
                 });
             }
 
@@ -209,4 +236,73 @@ exports.me = (req, res) => {
             });
         }
     );
+};
+
+// ===============================
+// GOOGLE SIGN-IN
+// ===============================
+exports.googleLogin = (req, res) => {
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.BACKEND_URL) {
+        return res.status(503).json({ success: false, message: "Google sign-in is not configured yet." });
+    }
+    pruneOAuthStore(oauthStates);
+    const state = crypto.randomBytes(32).toString("hex");
+    oauthStates.set(state, { expiresAt: Date.now() + 10 * 60 * 1000 });
+    const params = new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        redirect_uri: googleRedirectUri(),
+        response_type: "code",
+        scope: "openid email profile",
+        state,
+        prompt: "select_account"
+    });
+    return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+};
+
+exports.googleCallback = async (req, res) => {
+    const fail = () => res.redirect(`${frontendUrl()}/login?oauth_error=google`);
+    const { code, state } = req.query;
+    pruneOAuthStore(oauthStates);
+    if (!code || !state || !oauthStates.has(state)) return fail();
+    oauthStates.delete(state);
+
+    try {
+        const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+                code,
+                client_id: process.env.GOOGLE_CLIENT_ID,
+                client_secret: process.env.GOOGLE_CLIENT_SECRET,
+                redirect_uri: googleRedirectUri(),
+                grant_type: "authorization_code"
+            })
+        });
+        const tokens = await tokenResponse.json();
+        if (!tokenResponse.ok || !tokens.access_token) throw new Error("Google token exchange failed");
+
+        const profileResponse = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+            headers: { Authorization: `Bearer ${tokens.access_token}` }
+        });
+        const profile = await profileResponse.json();
+        if (!profileResponse.ok || !profile.email || profile.email_verified === false) throw new Error("Google account email is unavailable");
+
+        const user = await findOrCreateGoogleUser(profile);
+        pruneOAuthStore(oauthCodes);
+        const loginCode = crypto.randomBytes(32).toString("hex");
+        oauthCodes.set(loginCode, { token: createToken(user), user: publicUser(user), expiresAt: Date.now() + 60 * 1000 });
+        return res.redirect(`${frontendUrl()}/auth/google/callback?code=${loginCode}`);
+    } catch (error) {
+        console.error("Google sign-in failed:", error);
+        return fail();
+    }
+};
+
+exports.exchangeGoogleCode = (req, res) => {
+    const { code } = req.body || {};
+    pruneOAuthStore(oauthCodes);
+    const login = oauthCodes.get(code);
+    if (!login) return res.status(400).json({ success: false, message: "This Google sign-in link has expired. Please try again." });
+    oauthCodes.delete(code);
+    return res.json({ success: true, token: login.token, user: login.user });
 };
