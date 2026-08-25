@@ -27,6 +27,12 @@ function GoogleCallback() {
                     localStorage.setItem("token", res.data.token);
                 }
 
+                if (res.data.user) {
+                    localStorage.setItem("user", JSON.stringify(res.data.user));
+                }
+
+                window.dispatchEvent(new Event("authChanged"));
+
                 navigate("/");
             } catch (error) {
                 console.error("Google callback error:", error);
