@@ -1,0 +1,33 @@
+.support-quick-answers {
+    padding: 10px 12px;
+    border-top: 2px solid #20192b;
+    background: #fff8e8;
+}
+
+.support-quick-answers > strong {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 10px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.support-quick-answers > div {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+}
+
+.support-quick-answers button {
+    flex: 0 0 auto;
+    padding: 6px 9px;
+    border: 1px solid #20192b;
+    background: #fff;
+    color: #20192b;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.support-quick-answers button:hover {
+    background: #e9ff45;
+}
