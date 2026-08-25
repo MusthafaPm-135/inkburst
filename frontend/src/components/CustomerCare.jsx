@@ -11,10 +11,7 @@ const primaryQuestions = [
     "How can I get help with login?",
     "How do I request a refund?"
 ];
-const whatsappNumber = String(import.meta.env.VITE_WHATSAPP_NUMBER || "").replace(/\D/g, "");
-const whatsappUrl = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hello KeyraComics, I need customer care support.")}`
-    : "#";
+const whatsappUrl = "https://api.whatsapp.com/qr/DQYSOU2ZRETTJ1";
 
 function CustomerCare() {
     const navigate = useNavigate();
@@ -79,7 +76,7 @@ function CustomerCare() {
     return <aside className="customer-care" aria-live="polite">
         {isOpen && <section className="customer-care-panel" aria-label="Customer care live chat">
             <header className="customer-care-header"><div><span className="customer-care-kicker">KEYRACOMICS</span><h2>Customer care</h2></div><button type="button" onClick={() => setIsOpen(false)} aria-label="Close customer care">×</button></header>
-            <a className={`care-whatsapp-button${whatsappNumber ? "" : " unavailable"}`} href={whatsappUrl} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined} onClick={(event) => { if (!whatsappNumber) { event.preventDefault(); setError("WhatsApp customer care is being configured."); } }}><span aria-hidden="true">●</span> Chat on WhatsApp</a>
+            <a className="care-whatsapp-button" href={whatsappUrl} target="_blank" rel="noreferrer"><span aria-hidden="true">●</span> Chat on WhatsApp</a>
             {!user ? <div className="care-login-required"><span aria-hidden="true">🔒</span><h3>Log in to start a chat</h3><p>Customer care chat is available to registered KeyraComics customers.</p><button type="button" onClick={() => { setIsOpen(false); navigate("/login"); }}>Log in</button></div> :
                 <div className="customer-care-chat">
                     <div className={`care-connection-status ${notice ? "resolved" : (chat?.status || "new")}`}><span aria-hidden="true" />{notice ? "Chat closed" : chat?.status === "active" ? "Admin connected" : "Connecting you to a KeyraComics admin…"}</div>
