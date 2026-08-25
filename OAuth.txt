@@ -1,5 +1,0 @@
-Client ID
-452728166530-crhv0679knvpag9sms74mj0agf7h6dvb.apps.googleusercontent.com
-
-Client secret
-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
