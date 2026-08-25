@@ -90,7 +90,6 @@ function Navbar() {
             </div>
 
             <div className="nav-actions">
-                <ThemeToggle />
                 {user ? (
                     <>
                         <span className="mono">
@@ -102,6 +101,8 @@ function Navbar() {
                                 Admin
                             </button>
                         )}
+
+                        <ThemeToggle />
 
                         <button onClick={logout}>
                             Logout
