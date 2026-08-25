@@ -16,4 +16,6 @@
 .badge-admin { background: #e9ff45; color: #20192b; }
 .badge-user { background: #e7e0c9; color: #20192b; }
 .user-date { font-size: 0.85rem; color: #655b70; }
+.admin-page input, .admin-page textarea { color: #20192b; caret-color: #20192b; }
+.admin-page input::placeholder, .admin-page textarea::placeholder { color: #655b70; opacity: 1; }
 @media (max-width: 700px) { .admin-page { padding: 20px 16px 50px; }.stats-grid { grid-template-columns: repeat(2, 1fr); }.comic-form, .comic-admin-grid { grid-template-columns: 1fr; }.admin-panel { padding: 18px; }.admin-header { align-items: flex-start; flex-direction: column; }.admin-header-actions { width: 100%; flex-wrap: wrap; }.panel-heading { align-items: flex-start; flex-direction: column; } }
