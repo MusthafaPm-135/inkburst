@@ -4,6 +4,7 @@ import API, { API_ORIGIN } from "../api/axios";
 import { getComics } from "../api/comics";
 import "./AdminDashboard.css";
 import AdminSupport from "../components/AdminSupport";
+import "./AdminNext.css";
 
 const emptyComic = { title: "", author: "", genre: "", price: "", description: "" };
 
