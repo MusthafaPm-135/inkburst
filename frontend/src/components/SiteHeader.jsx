@@ -35,7 +35,13 @@ function SiteHeader() {
     };
 
     return <nav className="nav">
-        <Link to="/" className="logo brand-link"><BrandMark /></Link>
+        <div className="brand-theme-area">
+    <Link to="/" className="logo brand-link">
+        <BrandMark />
+    </Link>
+
+    <ThemeToggle />
+</div>
         <div className={`nav-links ${isMenuOpen ? "active" : ""}`} id="site-navigation">
             <button className="nav-section-link" type="button" onClick={() => goToSection("browse")}>Browse</button>
             <button className="nav-section-link" type="button" onClick={() => goToSection("how")}>How it works</button>
