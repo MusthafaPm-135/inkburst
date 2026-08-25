@@ -11,7 +11,7 @@ const primaryQuestions = [
     "How can I get help with login?",
     "How do I request a refund?"
 ];
-const whatsappUrl = "https://wa.me/qr/DQYSOU2ZRETTJ1";
+const whatsappUrl = "https://wa.me/+918075714019";
 
 function CustomerCare() {
     const navigate = useNavigate();
