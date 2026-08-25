@@ -1,3 +1,12 @@
+.customer-care-panel {
+    width: min(500px, calc(100vw - 32px));
+    height: min(720px, calc(100vh - 110px));
+}
+
+.care-messages {
+    min-height: 210px;
+}
+
 .care-whatsapp-button {
     display: flex;
     align-items: center;
@@ -62,4 +71,32 @@
 
 .care-primary-questions button:hover {
     background: #eeb023;
+}
+
+.care-input {
+    width: 100%;
+    box-sizing: border-box;
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.care-input input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.care-input button {
+    display: block;
+    min-width: 66px;
+}
+
+@media (max-width: 520px) {
+    .customer-care-panel {
+        width: calc(100vw - 24px);
+        height: min(680px, calc(100vh - 90px));
+    }
+
+    .care-messages {
+        min-height: 150px;
+    }
 }
