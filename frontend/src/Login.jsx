@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // 1. ADD THIS IMPORT
-import API from "../api/axios"; // (Make sure this path is correct based on where your Login.jsx is!)
+import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+import API from "../api/axios";
 
 function Login() {
     const [form, setForm] = useState({
@@ -8,7 +9,7 @@ function Login() {
         password: ""
     });
 
-    const navigate = useNavigate(); // 2. INITIALIZE THE HOOK HERE
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setForm({
@@ -17,6 +18,7 @@ function Login() {
         });
     };
 
+    // Normal email/password login
     const login = async (e) => {
         e.preventDefault();
 
@@ -25,18 +27,17 @@ function Login() {
                 "/auth/login",
                 form,
                 {
-                    withCredentials: true 
+                    withCredentials: true
                 }
             );
 
-            // You nailed this part! The token is saved safely.
-            localStorage.setItem("token", res.data.token);
+            if (res.data.token) {
+                localStorage.setItem("token", res.data.token);
+            }
 
             alert("Welcome " + res.data.user.username);
 
-            // Now this will work perfectly!
             navigate("/");
-
         } catch (error) {
             alert(
                 error.response?.data?.message ||
@@ -45,9 +46,44 @@ function Login() {
         }
     };
 
+    // Google login
+    const handleGoogleSuccess = async (credentialResponse) => {
+        try {
+            const res = await API.post(
+                "/auth/google",
+                {
+                    credential: credentialResponse.credential
+                },
+                {
+                    withCredentials: true
+                }
+            );
+
+            if (res.data.token) {
+                localStorage.setItem("token", res.data.token);
+            }
+
+            alert("Welcome " + res.data.user.username);
+
+            navigate("/");
+        } catch (error) {
+            console.error("Google login error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Google login failed"
+            );
+        }
+    };
+
+    const handleGoogleError = () => {
+        alert("Google login failed. Please try again.");
+    };
+
     return (
         <div>
             <h2>Login</h2>
+
             <form onSubmit={login}>
                 <input
                     name="email"
@@ -55,18 +91,42 @@ function Login() {
                     placeholder="Email"
                     value={form.email}
                     onChange={handleChange}
+                    required
                 />
+
                 <input
                     name="password"
                     type="password"
                     placeholder="Password"
                     value={form.password}
                     onChange={handleChange}
+                    required
                 />
+
                 <button type="submit">
                     Login
                 </button>
             </form>
+
+            <div style={{ margin: "20px 0" }}>
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px"
+                    }}
+                >
+                    <span style={{ flex: 1 }}>────────</span>
+                    <span>OR</span>
+                    <span style={{ flex: 1 }}>────────</span>
+                </div>
+            </div>
+
+            <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap
+            />
         </div>
     );
 }
