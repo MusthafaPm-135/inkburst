@@ -70,8 +70,8 @@ function SiteHeader() {
     </>
 )}
             <Link className="cart-btn" to="/cart"><span aria-hidden="true">🛒</span><span>Cart</span><span className="cart-count mono">{cartCount}</span></Link>
-            <button className="hamburger-btn" type="button" aria-label="Toggle navigation menu" aria-controls="site-navigation" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>
-                <span aria-hidden="true">{isMenuOpen ? "×" : "☰"}</span>
+            <button className={`hamburger-btn${isMenuOpen ? " open" : ""}`} type="button" aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"} aria-controls="site-navigation" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>
+                <span className="hamburger-icon" aria-hidden="true"><i /><i /><i /></span>
             </button>
         </div>
     </nav>;
