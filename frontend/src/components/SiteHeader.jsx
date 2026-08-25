@@ -2,7 +2,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import API from "../api/axios";
 import BrandMark from "./BrandMark";
-import ThemeToggle from "./ThemeToggle";
 
 function SiteHeader() {
     const navigate = useNavigate();
@@ -35,13 +34,9 @@ function SiteHeader() {
     };
 
     return <nav className="nav">
-        <div className="brand-theme-area">
-    <Link to="/" className="logo brand-link">
-        <BrandMark />
-    </Link>
-
-    <ThemeToggle />
-</div>
+        <Link to="/" className="logo brand-link">
+    <BrandMark />
+</Link>
         <div className={`nav-links ${isMenuOpen ? "active" : ""}`} id="site-navigation">
             <button className="nav-section-link" type="button" onClick={() => goToSection("browse")}>Browse</button>
             <button className="nav-section-link" type="button" onClick={() => goToSection("how")}>How it works</button>
