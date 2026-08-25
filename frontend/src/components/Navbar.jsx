@@ -8,37 +8,6 @@ function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [user, setUser] = useState(null);
 
-    const [theme, setTheme] = useState(() => {
-        return localStorage.getItem("keyra-theme") || "system";
-    });
-
-    useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme);
-        localStorage.setItem("keyra-theme", theme);
-    }, [theme]);
-
-    const cycleTheme = () => {
-        setTheme((current) => {
-            if (current === "system") return "light";
-            if (current === "light") return "dark";
-            return "system";
-        });
-    };
-
-    const themeLabel =
-        theme === "system"
-            ? "Device"
-            : theme === "light"
-            ? "Light"
-            : "Dark";
-
-    const themeIcon =
-        theme === "system"
-            ? "💻"
-            : theme === "light"
-            ? "☀️"
-            : "🌙";
-
     const loadUser = async () => {
         const savedUser = localStorage.getItem("user");
         const token = localStorage.getItem("token");
@@ -120,16 +89,6 @@ function Navbar() {
             </div>
 
             <div className="nav-actions">
-                <button
-                    type="button"
-                    className="theme-toggle-btn"
-                    onClick={cycleTheme}
-                    title="Switch theme"
-                >
-                    <span>{themeIcon}</span>
-                    <span>{themeLabel}</span>
-                </button>
-
                 {user ? (
                     <>
                         <button onClick={() => navigate("/library")}>
