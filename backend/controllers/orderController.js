@@ -3,6 +3,7 @@ const path = require("path");
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
 const { sendPurchaseInvoice } = require("../services/invoiceEmailService");
+const { calculateCoupon } = require("../services/couponService");
 
 const getRazorpay = () => {
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) return null;
@@ -44,18 +45,25 @@ exports.createPayment = async (req, res) => {
         const cartItems = await getCartItems(req.user.id);
         if (!cartItems.length) return res.status(400).json({ success: false, message: "Your cart is empty." });
 
-        const amount = Math.round(cartItems.reduce((sum, item) => sum + Number(item.price), 0) * 100);
-        if (amount < 100) return res.status(400).json({ success: false, message: "The order total must be at least ₹1.00." });
+        const subtotalPaise = Math.round(cartItems.reduce((sum, item) => sum + Number(item.price), 0) * 100);
+        const pricing = await calculateCoupon(req.body?.couponCode, subtotalPaise);
+        if (pricing.totalPaise < 100) return res.status(400).json({ success: false, message: "The order total must be at least ₹1.00." });
 
         const order = await razorpay.orders.create({
-            amount,
+            amount: pricing.totalPaise,
             currency: "INR",
             receipt: `keyra_${req.user.id}_${Date.now()}`,
-            notes: { user_id: String(req.user.id) }
+            notes: {
+                user_id: String(req.user.id),
+                coupon_code: pricing.code,
+                subtotal_paise: String(pricing.subtotalPaise),
+                discount_paise: String(pricing.discountPaise)
+            }
         });
-        return res.json({ success: true, key: process.env.RAZORPAY_KEY_ID, order, itemCount: cartItems.length });
+        return res.json({ success: true, key: process.env.RAZORPAY_KEY_ID, order, itemCount: cartItems.length, pricing: { subtotal: pricing.subtotalPaise / 100, discount: pricing.discountPaise / 100, total: pricing.totalPaise / 100, code: pricing.code } });
     } catch (error) {
         console.error("Razorpay order creation failed:", error);
+        if (error.status) return res.status(error.status).json({ success: false, message: error.message });
         return res.status(500).json({ success: false, message: "Could not start the payment. Please try again." });
     }
 };
@@ -83,20 +91,34 @@ exports.verifyPayment = async (req, res) => {
 
         const cartItems = await getCartItems(req.user.id);
         if (!cartItems.length) return res.json({ success: true, message: "Your purchase is already available in your library." });
-        const totalInPaise = Math.round(cartItems.reduce((sum, item) => sum + Number(item.price), 0) * 100);
-        if (totalInPaise !== paymentOrder.amount) {
+        const subtotalPaise = Math.round(cartItems.reduce((sum, item) => sum + Number(item.price), 0) * 100);
+        const pricing = await calculateCoupon(paymentOrder.notes?.coupon_code, subtotalPaise);
+        if (pricing.totalPaise !== paymentOrder.amount) {
             return res.status(409).json({ success: false, message: "Your cart changed while payment was in progress. Please contact support with your payment ID." });
         }
 
         const connection = await db.promise().getConnection();
         try {
             await connection.beginTransaction();
-            for (const item of cartItems) {
+            if (pricing.coupon) {
+                const [couponUpdate] = await connection.query(`UPDATE coupons SET used_count = used_count + 1 WHERE id = ? AND active = 1
+                    AND (starts_at IS NULL OR starts_at <= NOW()) AND (expires_at IS NULL OR expires_at >= NOW())
+                    AND (usage_limit IS NULL OR used_count < usage_limit)`, [pricing.coupon.id]);
+                if (!couponUpdate.affectedRows) throw new Error("Coupon became unavailable before payment completed.");
+            }
+            let allocatedPaise = 0;
+            for (let index = 0; index < cartItems.length; index += 1) {
+                const item = cartItems[index];
+                const itemPaidPaise = index === cartItems.length - 1
+                    ? pricing.totalPaise - allocatedPaise
+                    : Math.round(Number(item.price) * 100 * pricing.totalPaise / pricing.subtotalPaise);
+                allocatedPaise += itemPaidPaise;
+                item.paidPrice = itemPaidPaise / 100;
                 await connection.query(
                     `INSERT INTO orders (user_id, comic_id, price, payment_status)
                      SELECT ?, ?, ?, 'Paid' WHERE NOT EXISTS
                      (SELECT 1 FROM orders WHERE user_id = ? AND comic_id = ? AND payment_status = 'Paid')`,
-                    [req.user.id, item.comic_id, item.price, req.user.id, item.comic_id]
+                    [req.user.id, item.comic_id, item.paidPrice, req.user.id, item.comic_id]
                 );
             }
             await connection.query("DELETE FROM cart WHERE user_id = ?", [req.user.id]);
@@ -110,7 +132,7 @@ exports.verifyPayment = async (req, res) => {
         const users = await query("SELECT username, email FROM users WHERE id = ? LIMIT 1", [req.user.id]);
         const invoiceResult = await sendPurchaseInvoice({
             customer: users[0],
-            items: cartItems,
+            items: cartItems.map((item) => ({ ...item, price: item.paidPrice })),
             paymentId: razorpay_payment_id,
             razorpayOrderId: razorpay_order_id
         }).catch((emailError) => {

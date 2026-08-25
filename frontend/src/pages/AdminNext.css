@@ -125,6 +125,19 @@
 .admin-comic p { color: #95929e; }
 .comic-actions { justify-content: flex-start; }
 
+.coupon-admin-form { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; }
+.coupon-admin-form label { display: grid; gap: 8px; color: #cfccd5; font-family: 'JetBrains Mono',monospace; font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.coupon-admin-form select { padding: 13px; border: 1px solid #c9c5ba; border-radius: 9px; background: #f5f2ea; color: #07070b; }
+.coupon-admin-form .primary-button { align-self: end; min-height: 44px; }
+.coupon-admin-list { display: grid; gap: 8px; margin-top: 22px; }
+.coupon-admin-list article { display: grid; grid-template-columns: minmax(0,1fr) auto auto auto; gap: 10px; align-items: center; padding: 13px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; background: #1a1a24; }
+.coupon-admin-list article > div { display: grid; gap: 3px; }
+.coupon-admin-list article strong { color: #fff; font-family: 'JetBrains Mono',monospace; }
+.coupon-admin-list article span { color: #918e9a; font-size: 11px; }
+.coupon-admin-list .coupon-live,.coupon-admin-list .coupon-off { padding: 5px 8px; border-radius: 999px; color: #07070b; font-weight: 800; }
+.coupon-admin-list .coupon-live { background: #dfff00; }
+.coupon-admin-list .coupon-off { background: #aaa7b2; }
+
 .admin-users-table-wrap { border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: #111119; }
 .admin-users-table th,
 .admin-users-table td { border-color: rgba(255,255,255,.09); }
@@ -168,5 +181,8 @@
     .stats-grid { grid-template-columns: repeat(2,1fr); }
     .stat-card { padding: 18px; }
     .comic-admin-grid { grid-template-columns: 1fr; }
+    .coupon-admin-form { grid-template-columns: 1fr 1fr; }
+    .coupon-admin-list article { grid-template-columns: 1fr auto; }
+    .coupon-admin-list article button { width: 100%; }
     .admin-users-table { min-width: 720px; }
 }

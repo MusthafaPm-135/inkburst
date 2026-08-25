@@ -13,6 +13,8 @@ function AdminDashboard() {
     const [stats, setStats] = useState(null);
     const [comics, setComics] = useState([]);
     const [usersList, setUsersList] = useState([]);
+    const [coupons, setCoupons] = useState([]);
+    const [couponForm, setCouponForm] = useState({ code: "", discount_type: "percent", discount_value: "", min_order: "0", max_discount: "", usage_limit: "", expires_at: "" });
     const [form, setForm] = useState(emptyComic);
     const [files, setFiles] = useState({ cover_image: null, pdf_file: null });
     const [editingId, setEditingId] = useState(null);
@@ -65,7 +67,20 @@ function AdminDashboard() {
         }
     };
 
-    useEffect(() => { loadDashboard(); }, []);
+    const loadCoupons = async () => { try { const { data } = await API.get("/coupons/admin"); setCoupons(data.coupons || []); } catch { /* coupon panel stays empty */ } };
+    useEffect(() => { loadDashboard(); loadCoupons(); }, []);
+
+    const createCoupon = async (event) => {
+        event.preventDefault(); setMessage("");
+        try {
+            await API.post("/coupons/admin", couponForm);
+            setCouponForm({ code: "", discount_type: "percent", discount_value: "", min_order: "0", max_discount: "", usage_limit: "", expires_at: "" });
+            setMessage("Coupon created successfully.");
+            loadCoupons();
+        } catch (error) { setMessage(error.response?.data?.message || "Could not create coupon."); }
+    };
+    const toggleCoupon = async (id) => { await API.put(`/coupons/admin/${id}/toggle`); loadCoupons(); };
+    const deleteCoupon = async (id) => { if (!window.confirm("Delete this coupon?")) return; await API.delete(`/coupons/admin/${id}`); loadCoupons(); };
 
     const updateField = (event) => {
         const { name, value } = event.target;
@@ -209,6 +224,20 @@ function AdminDashboard() {
                 <img src={getCoverUrl(comic.cover_image || comic.cover)} alt="" />
                 <div><h3>{comic.title}</h3><p>{comic.author} · ₹{comic.price}</p><div className="comic-actions"><button className="secondary-button" onClick={() => editComic(comic)}>Edit</button><button className="danger-button" onClick={() => deleteComic(comic)}>Delete</button></div></div>
             </article>)}{!loading && comics.length === 0 && <p>No comics have been uploaded yet.</p>}</div>
+        </section>
+
+        <section className="admin-panel coupon-admin-panel"><div className="panel-heading"><div><h2>Coupon codes</h2><p>Create discounts for checkout</p></div></div>
+            <form className="coupon-admin-form" onSubmit={createCoupon}>
+                <label>Code<input value={couponForm.code} onChange={(event) => setCouponForm({ ...couponForm, code: event.target.value.toUpperCase() })} placeholder="WELCOME10" required /></label>
+                <label>Discount type<select value={couponForm.discount_type} onChange={(event) => setCouponForm({ ...couponForm, discount_type: event.target.value })}><option value="percent">Percentage</option><option value="fixed">Fixed amount</option></select></label>
+                <label>Discount value<input type="number" min="0.01" step="0.01" value={couponForm.discount_value} onChange={(event) => setCouponForm({ ...couponForm, discount_value: event.target.value })} required /></label>
+                <label>Minimum order<input type="number" min="0" step="0.01" value={couponForm.min_order} onChange={(event) => setCouponForm({ ...couponForm, min_order: event.target.value })} /></label>
+                <label>Maximum discount<input type="number" min="0" step="0.01" value={couponForm.max_discount} onChange={(event) => setCouponForm({ ...couponForm, max_discount: event.target.value })} placeholder="Optional" /></label>
+                <label>Usage limit<input type="number" min="1" value={couponForm.usage_limit} onChange={(event) => setCouponForm({ ...couponForm, usage_limit: event.target.value })} placeholder="Unlimited" /></label>
+                <label>Expiry date<input type="datetime-local" value={couponForm.expires_at} onChange={(event) => setCouponForm({ ...couponForm, expires_at: event.target.value })} /></label>
+                <button className="primary-button" type="submit">Create coupon</button>
+            </form>
+            <div className="coupon-admin-list">{coupons.map((coupon) => <article key={coupon.id}><div><strong>{coupon.code}</strong><span>{coupon.discount_type === "percent" ? `${Number(coupon.discount_value)}% off` : `₹${Number(coupon.discount_value).toFixed(2)} off`} · used {coupon.used_count}{coupon.usage_limit ? `/${coupon.usage_limit}` : ""}</span></div><span className={coupon.active ? "coupon-live" : "coupon-off"}>{coupon.active ? "Active" : "Paused"}</span><button className="secondary-button" type="button" onClick={() => toggleCoupon(coupon.id)}>{coupon.active ? "Pause" : "Enable"}</button><button className="danger-button" type="button" onClick={() => deleteCoupon(coupon.id)}>Delete</button></article>)}{!coupons.length && <p>No coupons created yet.</p>}</div>
         </section>
 
         <AdminSupport />

@@ -125,6 +125,14 @@ footer { margin-top: 0; border-color: rgba(255,255,255,.12); background: #07070b
 .cart-row img,.library-card img { border: 0; border-radius: 8px; }
 .summary-total { border-color: rgba(255,255,255,.18); }
 .checkout-line { border-color: rgba(255,255,255,.1); }
+.coupon-box { display: grid; gap: 8px; margin-top: 10px; padding: 16px; border: 1px solid rgba(223,255,0,.3); border-radius: 12px; background: rgba(223,255,0,.05); }
+.coupon-box label { color: #dfff00; font-family: 'JetBrains Mono',monospace; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.coupon-box > div { display: flex; gap: 8px; }
+.coupon-box input { min-width: 0; flex: 1; padding: 11px 12px; border: 1px solid #45424e; border-radius: 8px; background: #0b0b11; color: #fff; font: inherit; font-weight: 800; letter-spacing: .08em; }
+.coupon-box button { padding: 0 16px; border: 0; border-radius: 8px; background: #dfff00; color: #07070b; font-weight: 800; }
+.coupon-box button:disabled { opacity: .5; }
+.coupon-box p { margin: 0; color: #dfff00; font-size: 12px; font-weight: 700; }
+.discount-line { color: #dfff00; }
 
 @media (max-width: 900px) {
     .nav { grid-template-columns: 1fr auto; }

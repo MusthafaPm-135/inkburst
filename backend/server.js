@@ -4,6 +4,7 @@ require("dotenv").config();
 const orderRoutes = require("./routes/orders");
 const cartRoutes = require("./routes/cart");
 const supportRoutes = require("./routes/support");
+const couponRoutes = require("./routes/coupons");
 const db = require("./config/db");
 const express = require("express");
 const cors = require("cors");
@@ -78,6 +79,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
 
 app.use("/api/support", supportRoutes);
+app.use("/api/coupons", couponRoutes);
 
 app.use("/api/auth", authRoutes);
 
