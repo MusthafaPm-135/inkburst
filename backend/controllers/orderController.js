@@ -2,6 +2,7 @@ const db = require("../config/db");
 const path = require("path");
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
+const { sendPurchaseInvoice } = require("../services/invoiceEmailService");
 
 const getRazorpay = () => {
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) return null;
@@ -13,7 +14,7 @@ const query = (sql, values = []) => new Promise((resolve, reject) => {
 });
 
 const getCartItems = (userId) => query(
-    `SELECT cart.comic_id, comics.price
+    `SELECT cart.comic_id, comics.title, comics.author, comics.price
      FROM cart JOIN comics ON cart.comic_id = comics.id
      WHERE cart.user_id = ?`,
     [userId]
@@ -106,7 +107,22 @@ exports.verifyPayment = async (req, res) => {
         } finally {
             connection.release();
         }
-        return res.json({ success: true, message: "Payment verified. Your comics are now in your library." });
+        const users = await query("SELECT username, email FROM users WHERE id = ? LIMIT 1", [req.user.id]);
+        const invoiceResult = await sendPurchaseInvoice({
+            customer: users[0],
+            items: cartItems,
+            paymentId: razorpay_payment_id,
+            razorpayOrderId: razorpay_order_id
+        }).catch((emailError) => {
+            console.error("INVOICE EMAIL ERROR:", emailError.message);
+            return { sent: false };
+        });
+        return res.json({
+            success: true,
+            message: invoiceResult.sent
+                ? "Payment verified. Your comics are now in your library and your invoice was emailed."
+                : "Payment verified. Your comics are now in your library."
+        });
     } catch (error) {
         console.error("Payment verification failed:", error);
         return res.status(500).json({ success: false, message: "We could not finish your order. Please contact support with your payment ID." });
