@@ -1,37 +1,46 @@
 const https = require("https");
-const querystring = require("querystring");
-
 const isConfigured = () => [
-    "TWILIO_ACCOUNT_SID",
-    "TWILIO_AUTH_TOKEN",
-    "TWILIO_WHATSAPP_FROM",
+    "META_WHATSAPP_ACCESS_TOKEN",
+    "META_WHATSAPP_PHONE_NUMBER_ID",
+    "META_WHATSAPP_TEMPLATE_NAME",
+    "META_GRAPH_API_VERSION",
     "ADMIN_WHATSAPP_TO",
-    "TWILIO_WHATSAPP_CONTENT_SID"
 ].every((name) => process.env[name]);
 
 const notifyAdminOfNewChat = ({ chatId, username }) => {
     if (!isConfigured()) return Promise.resolve({ skipped: true });
 
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const body = querystring.stringify({
-        From: process.env.TWILIO_WHATSAPP_FROM,
-        To: process.env.ADMIN_WHATSAPP_TO,
-        ContentSid: process.env.TWILIO_WHATSAPP_CONTENT_SID,
-        ContentVariables: JSON.stringify({
-            1: username || "A customer",
-            2: String(chatId),
-            3: `${(process.env.FRONTEND_URL || "https://keyracomics.vercel.app").replace(/\/$/, "")}/admin`
-        })
+    const graphVersion = String(process.env.META_GRAPH_API_VERSION).startsWith("v")
+        ? String(process.env.META_GRAPH_API_VERSION)
+        : `v${process.env.META_GRAPH_API_VERSION}`;
+    const recipient = String(process.env.ADMIN_WHATSAPP_TO).replace(/\D/g, "");
+    const adminUrl = `${(process.env.FRONTEND_URL || "https://keyracomics.vercel.app").replace(/\/$/, "")}/admin`;
+    const body = JSON.stringify({
+        messaging_product: "whatsapp",
+        to: recipient,
+        type: "template",
+        template: {
+            name: process.env.META_WHATSAPP_TEMPLATE_NAME,
+            language: { code: process.env.META_WHATSAPP_LANGUAGE_CODE || "en" },
+            components: [{
+                type: "body",
+                parameters: [
+                    { type: "text", text: username || "A customer" },
+                    { type: "text", text: String(chatId) },
+                    { type: "text", text: adminUrl }
+                ]
+            }]
+        }
     });
 
     return new Promise((resolve, reject) => {
         const request = https.request({
-            hostname: "api.twilio.com",
-            path: `/2010-04-01/Accounts/${accountSid}/Messages.json`,
+            hostname: "graph.facebook.com",
+            path: `/${graphVersion}/${process.env.META_WHATSAPP_PHONE_NUMBER_ID}/messages`,
             method: "POST",
-            auth: `${accountSid}:${process.env.TWILIO_AUTH_TOKEN}`,
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
+                Authorization: `Bearer ${process.env.META_WHATSAPP_ACCESS_TOKEN}`,
+                "Content-Type": "application/json",
                 "Content-Length": Buffer.byteLength(body)
             }
         }, (response) => {
@@ -39,7 +48,7 @@ const notifyAdminOfNewChat = ({ chatId, username }) => {
             response.on("data", (chunk) => { responseBody += chunk; });
             response.on("end", () => {
                 if (response.statusCode >= 200 && response.statusCode < 300) return resolve({ sent: true });
-                reject(new Error(`Twilio returned status ${response.statusCode}: ${responseBody.slice(0, 200)}`));
+                reject(new Error(`Meta WhatsApp returned status ${response.statusCode}: ${responseBody.slice(0, 200)}`));
             });
         });
 
