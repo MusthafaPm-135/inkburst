@@ -54,7 +54,7 @@ function HomeDesign() {
         ONE CLICK AWAY.
     </h1>
 
-    <p>
+    <p className="hero-copy-box permanent-light-box">
         Digital-only comics from independent creators —
         delivered instantly, readable anywhere,
         and never out of print.

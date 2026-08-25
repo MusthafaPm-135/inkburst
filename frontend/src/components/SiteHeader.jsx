@@ -51,7 +51,7 @@ function SiteHeader() {
             {user?.role === "admin" && <Link className="admin-nav-link" to="/admin" onClick={closeMenu}>Admin</Link>}
         </div>
         <div className="nav-actions">
-            <ThemeToggle />
+            
 
 {user ? (
     <>

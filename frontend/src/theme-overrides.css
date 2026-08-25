@@ -414,3 +414,15 @@ html[data-theme="dark"] .home-hero {
         font-size: 12px;
     }
 }
+
+/* Keep hero description box light forever */
+.permanent-light-box {
+    background: #f4eedc !important;
+    color: #111111 !important;
+    border-color: #111111 !important;
+}
+
+.permanent-light-box,
+.permanent-light-box * {
+    color: #111111 !important;
+}
