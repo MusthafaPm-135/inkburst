@@ -4,12 +4,22 @@ import SiteHeader from "../components/SiteHeader";
 import BrandMark from "../components/BrandMark";
 import ComicCard from "../components/ComicCard";
 import { getComics } from "../api/comics";
+import { API_ORIGIN } from "../api/axios";
 import "../styles/Home.css";
+import "../styles/StorefrontRefresh.css";
 
 function HomeDesign() {
     const location = useLocation();
     const [comics, setComics] = useState([]);
     const [loading, setLoading] = useState(true);
+    const featuredComic = comics[0];
+
+    const getCoverUrl = (comic) => {
+        const cover = comic?.cover_image || comic?.cover;
+        if (!cover) return "";
+        if (/^(https?:|data:)/.test(cover)) return cover;
+        return cover.startsWith("/") ? `${API_ORIGIN}${cover}` : `${API_ORIGIN}/uploads/covers/${cover}`;
+    };
 
     useEffect(() => {
         getComics()
@@ -31,69 +41,33 @@ function HomeDesign() {
         <>
         <SiteHeader />
 <section className="hero" id="top">
-
-    <div className="burst">
-        <span>
-            SOFT
-            <br />
-            COPIES
-            <br />
-            ONLY
-        </span>
+    <div className="hero-content">
+        <div className="hero-eyebrow mono">Original stories. Instant access.</div>
+        <h1>READ BOLD.<br />OWN DIGITAL.</h1>
+        <p className="hero-copy-box permanent-light-box">Digital-only comics from independent creators — delivered instantly, readable anywhere, and never out of print.</p>
+        <div className="hero-actions">
+            <button className="btn-primary" onClick={() => document.getElementById("browse").scrollIntoView({ behavior: "smooth" })}>Explore Comics</button>
+            <button className="btn-ghost" onClick={() => document.getElementById("how").scrollIntoView({ behavior: "smooth" })}>How It Works</button>
+        </div>
+        <div className="hero-proof mono"><span>⚡ INSTANT DELIVERY</span><span>🔒 SECURE PAYMENT</span><span>∞ YOUR LIBRARY</span></div>
     </div>
-
-    <div className="hero-eyebrow mono">
-        No paper. No shipping. Just panels.
+    <div className="hero-showcase">
+        <div className="burst"><span>DIGITAL<br />ORIGINALS</span></div>
+        <div className="featured-issue">
+            {featuredComic && getCoverUrl(featuredComic) ? <img src={getCoverUrl(featuredComic)} alt="" /> : <div className="featured-placeholder"><span className="mono">KEYRA ORIGINAL</span><strong>NEW WORLDS<br />LIVE HERE.</strong><small className="mono">ISSUE #001</small></div>}
+        </div>
+        <div className="featured-caption"><span className="mono">FEATURED DROP</span><strong>{featuredComic?.title || "THE FIRST WAVE"}</strong><small>{featuredComic ? `by ${featuredComic.author}` : "KeyraComics Originals"}</small></div>
     </div>
-
-    <h1>
-        YOUR NEXT
-        <br />
-        OBSESSION IS
-        <br />
-        ONE CLICK AWAY.
-    </h1>
-
-    <p className="hero-copy-box permanent-light-box">
-        Digital-only comics from independent creators —
-        delivered instantly, readable anywhere,
-        and never out of print.
-    </p>
-
-    <div className="hero-actions">
-
-        <button
-            className="btn-primary"
-            onClick={() =>
-                document
-                    .getElementById("browse")
-                    .scrollIntoView({ behavior: "smooth" })
-            }
-        >
-            Start Reading
-        </button>
-
-        <button
-            className="btn-ghost"
-            onClick={() =>
-                document
-                    .getElementById("how")
-                    .scrollIntoView({ behavior: "smooth" })
-            }
-        >
-            How It Works
-        </button>
-
-    </div>
-
 </section>
+<div className="reader-promise" aria-label="KeyraComics benefits"><span><strong>BUY ONCE</strong><small>No subscription needed</small></span><span><strong>READ ANYWHERE</strong><small>Phone, tablet, or desktop</small></span><span><strong>KEEP YOUR SHELF</strong><small>Purchases stay in Library</small></span><span><strong>BACK NEW VOICES</strong><small>Independent creator stories</small></span></div>
 <section
     className="section"
     id="browse"
 >
 
-    <div className="section-head">
-        <h2>Browse the Stack</h2>
+    <div className="section-head storefront-section-head">
+        <div><p className="mono section-kicker">FIND YOUR NEXT FIX</p><h2>Browse the Stack</h2></div>
+        <p>{loading ? "Opening the vault…" : `${comics.length} digital release${comics.length === 1 ? "" : "s"} ready to discover`}</p>
     </div>
 
     {loading ? (
