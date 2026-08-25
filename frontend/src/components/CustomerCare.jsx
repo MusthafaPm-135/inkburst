@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import "./CustomerCare.css";
 import "./CustomerCareQuestions.css";
+import "./CustomerCareNext.css";
 
 const primaryQuestions = [
     "How do I read a purchased comic?",
