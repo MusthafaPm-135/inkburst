@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import API from "../api/axios";
 import BrandMark from "./BrandMark";
+import ThemeToggle from "./ThemeToggle";
 
 function SiteHeader() {
     const navigate = useNavigate();
@@ -44,7 +45,29 @@ function SiteHeader() {
             {user?.role === "admin" && <Link className="admin-nav-link" to="/admin" onClick={closeMenu}>Admin</Link>}
         </div>
         <div className="nav-actions">
-            {user ? <><Link className="auth-link" to="/library">Library</Link><button className="auth-link auth-button" onClick={logout}>Log out</button></> : <><Link className="auth-link" to="/login">Log in</Link><Link className="signup-link" to="/register">Sign up</Link></>}
+            <ThemeToggle />
+
+{user ? (
+    <>
+        <Link className="auth-link" to="/library">
+            Library
+        </Link>
+
+        <button className="auth-link auth-button" onClick={logout}>
+            Log out
+        </button>
+    </>
+) : (
+    <>
+        <Link className="auth-link" to="/login">
+            Log in
+        </Link>
+
+        <Link className="signup-link" to="/register">
+            Sign up
+        </Link>
+    </>
+)}
             <Link className="cart-btn" to="/cart"><span aria-hidden="true">🛒</span><span>Cart</span><span className="cart-count mono">{cartCount}</span></Link>
             <button className="hamburger-btn" type="button" aria-label="Toggle navigation menu" aria-controls="site-navigation" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>
                 <span aria-hidden="true">{isMenuOpen ? "×" : "☰"}</span>

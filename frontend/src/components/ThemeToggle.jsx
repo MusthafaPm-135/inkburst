@@ -1,7 +1,22 @@
-import { useTheme } from "../context/ThemeContext";
+import { useEffect, useState } from "react";
 
 function ThemeToggle() {
-    const { theme, cycleTheme } = useTheme();
+    const [theme, setTheme] = useState(() => {
+        return localStorage.getItem("keyra-theme") || "system";
+    });
+
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("keyra-theme", theme);
+    }, [theme]);
+
+    const cycleTheme = () => {
+        setTheme((current) => {
+            if (current === "system") return "light";
+            if (current === "light") return "dark";
+            return "system";
+        });
+    };
 
     const label =
         theme === "system"
