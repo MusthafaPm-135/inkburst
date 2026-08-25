@@ -300,9 +300,32 @@ exports.googleCallback = async (req, res) => {
 
 exports.exchangeGoogleCode = (req, res) => {
     const { code } = req.body || {};
+
     pruneOAuthStore(oauthCodes);
+
     const login = oauthCodes.get(code);
-    if (!login) return res.status(400).json({ success: false, message: "This Google sign-in link has expired. Please try again." });
+
+    if (!login) {
+        return res.status(400).json({
+            success: false,
+            message: "This Google sign-in link has expired. Please try again."
+        });
+    }
+
     oauthCodes.delete(code);
-    return res.json({ success: true, token: login.token, user: login.user });
+
+    res.cookie("token", login.token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    return res.json({
+        success: true,
+        message: "Google login successful",
+        token: login.token,
+        user: login.user
+    });
 };
