@@ -90,11 +90,13 @@ function Navbar() {
             </div>
 
             <div className="nav-actions">
+                <ThemeToggle />
+
                 {user ? (
                     <>
-                        <span className="mono">
-                            {user.username}
-                        </span>
+                        <button onClick={() => navigate("/library")}>
+                            Library
+                        </button>
 
                         {user.role === "admin" && (
                             <button onClick={() => navigate("/admin")}>
@@ -102,10 +104,8 @@ function Navbar() {
                             </button>
                         )}
 
-                        <ThemeToggle />
-
                         <button onClick={logout}>
-                            Logout
+                            Log Out
                         </button>
                     </>
                 ) : (
