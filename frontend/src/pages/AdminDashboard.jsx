@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API, { API_ORIGIN } from "../api/axios";
 import { getComics } from "../api/comics";
 import "./AdminDashboard.css";
+import AdminSupport from "../components/AdminSupport";
 
 const emptyComic = { title: "", author: "", genre: "", price: "", description: "" };
 
@@ -208,6 +209,8 @@ function AdminDashboard() {
                 <div><h3>{comic.title}</h3><p>{comic.author} · ₹{comic.price}</p><div className="comic-actions"><button className="secondary-button" onClick={() => editComic(comic)}>Edit</button><button className="danger-button" onClick={() => deleteComic(comic)}>Delete</button></div></div>
             </article>)}{!loading && comics.length === 0 && <p>No comics have been uploaded yet.</p>}</div>
         </section>
+
+        <AdminSupport />
 
         <section className="admin-panel">
             <div className="panel-heading">

@@ -1,145 +1,77 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../api/axios";
 import "./CustomerCare.css";
 
-const quickQuestions = [
-    "How do I read a purchased comic?",
-    "Which payment methods can I use?",
-    "Where can I find my order?"
-];
-
-const getReply = (message) => {
-    const text = message.toLowerCase();
-
-    if (text.includes("read") || text.includes("library") || text.includes("download")) {
-        return "After payment is verified, open Library from the top navigation. Your purchased comics will appear there with a Read Comic button.";
-    }
-    if (text.includes("payment") || text.includes("pay") || text.includes("upi") || text.includes("card") || text.includes("razorpay")) {
-        return "KeyraComics checkout uses Razorpay and supports the payment methods shown in the secure Razorpay window, including eligible UPI, cards, net banking, and wallets.";
-    }
-    if (text.includes("order") || text.includes("purchase") || text.includes("bought")) {
-        return "Completed purchases are added to your Library. Make sure you are logged in with the same account used during checkout.";
-    }
-    if (text.includes("login") || text.includes("sign in") || text.includes("google") || text.includes("account")) {
-        return "You can log in with email and password or continue with Google. If Google login fails, return to the login page and try again in the same browser.";
-    }
-    if (text.includes("cart") || text.includes("remove")) {
-        return "Open Cart from the top navigation to review or remove comics before continuing to checkout.";
-    }
-    if (text.includes("refund") || text.includes("cancel")) {
-        return "For payment, cancellation, or refund concerns, keep your Razorpay payment reference ready and choose Contact Support below so the team can review it.";
-    }
-    if (text.includes("hello") || text.includes("hi") || text.includes("hey")) {
-        return "Hello! I can help with KeyraComics accounts, cart, checkout, payments, orders, and Library access. What do you need help with?";
-    }
-
-    return "I could not match that question yet. Try asking about login, cart, payment, orders, refunds, or reading comics from your Library.";
-};
-
 function CustomerCare() {
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
-    const [view, setView] = useState("home");
+    const [chat, setChat] = useState(null);
+    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
-    const [messages, setMessages] = useState([
-        { role: "assistant", text: "Hi! I am the Keyra automated assistant. How can I help you today?" }
-    ]);
+    const [error, setError] = useState("");
+    const [sending, setSending] = useState(false);
     const messagesEndRef = useRef(null);
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+
+    const loadChat = async () => {
+        if (!user) return;
+        try {
+            const response = await API.get("/support/chat");
+            setChat(response.data.chat);
+            setMessages(response.data.messages || []);
+            setError("");
+        } catch (requestError) {
+            setError(requestError.response?.status === 401 ? "Your session expired. Please log in again." : "Customer care is temporarily unavailable.");
+        }
+    };
 
     useEffect(() => {
-        if (isOpen && view === "chat") {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        }
-    }, [isOpen, messages, view]);
+        if (!isOpen || !user) return undefined;
+        loadChat();
+        const timer = window.setInterval(loadChat, 4000);
+        return () => window.clearInterval(timer);
+    }, [isOpen, user?.id]);
 
-    const sendMessage = (text) => {
-        const question = text.trim();
-        if (!question) return;
+    useEffect(() => {
+        if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [isOpen, messages]);
 
-        setMessages((current) => [
-            ...current,
-            { role: "user", text: question },
-            { role: "assistant", text: getReply(question) }
-        ]);
-        setInput("");
-    };
-
-    const submit = (event) => {
+    const sendMessage = async (event) => {
         event.preventDefault();
-        sendMessage(input);
+        const message = input.trim();
+        if (!message || sending) return;
+        setSending(true);
+        setError("");
+        try {
+            const response = await API.post("/support/messages", { message });
+            setInput("");
+            setChat(response.data.chat);
+            setMessages((current) => [...current, response.data.message]);
+        } catch (requestError) {
+            setError(requestError.response?.data?.message || "Could not send your message.");
+        } finally {
+            setSending(false);
+        }
     };
 
-    const closePanel = () => {
-        setIsOpen(false);
-        setView("home");
-    };
-
-    return (
-        <aside className="customer-care" aria-live="polite">
-            {isOpen && (
-                <section className="customer-care-panel" aria-label="Customer care">
-                    <header className="customer-care-header">
-                        <div>
-                            <span className="customer-care-kicker">KEYRACOMICS</span>
-                            <h2>{view === "chat" ? "AI chat" : "Customer care"}</h2>
-                        </div>
-                        <button type="button" onClick={closePanel} aria-label="Close customer care">×</button>
-                    </header>
-
-                    {view === "home" ? (
-                        <div className="customer-care-home">
-                            <p>Need help with your account, payment, order, or Library?</p>
-                            <button className="care-option care-option-ai" type="button" onClick={() => setView("chat")}>
-                                <span aria-hidden="true">✦</span>
-                                <span><strong>Chat with Keyra AI</strong><small>Get instant automated help</small></span>
-                                <span aria-hidden="true">→</span>
-                            </button>
-                            <div className="care-topics">
-                                <strong>Popular help topics</strong>
-                                {quickQuestions.map((question) => (
-                                    <button key={question} type="button" onClick={() => { setView("chat"); sendMessage(question); }}>
-                                        {question}
-                                    </button>
-                                ))}
-                            </div>
-                            <p className="care-disclaimer">The assistant gives automated website help and cannot view private payment or account details.</p>
-                        </div>
-                    ) : (
-                        <div className="customer-care-chat">
-                            <button className="care-back" type="button" onClick={() => setView("home")}>← Customer care</button>
-                            <div className="care-messages" aria-label="Chat messages">
-                                {messages.map((message, index) => (
-                                    <p className={`care-message ${message.role}`} key={`${message.role}-${index}`}>
-                                        {message.text}
-                                    </p>
-                                ))}
-                                <div ref={messagesEndRef} />
-                            </div>
-                            <div className="care-suggestions">
-                                {quickQuestions.slice(0, 2).map((question) => (
-                                    <button key={question} type="button" onClick={() => sendMessage(question)}>{question}</button>
-                                ))}
-                            </div>
-                            <form className="care-input" onSubmit={submit}>
-                                <label className="sr-only" htmlFor="care-message-input">Ask Keyra AI a question</label>
-                                <input id="care-message-input" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Type your question..." autoComplete="off" />
-                                <button type="submit" aria-label="Send message">Send</button>
-                            </form>
-                        </div>
-                    )}
-                </section>
-            )}
-
-            <button
-                className="customer-care-launcher"
-                type="button"
-                aria-label={isOpen ? "Close customer care" : "Open customer care"}
-                aria-expanded={isOpen}
-                onClick={() => isOpen ? closePanel() : setIsOpen(true)}
-            >
-                <span aria-hidden="true">{isOpen ? "×" : "?"}</span>
-                <strong>{isOpen ? "Close" : "Customer care"}</strong>
-            </button>
-        </aside>
-    );
+    return <aside className="customer-care" aria-live="polite">
+        {isOpen && <section className="customer-care-panel" aria-label="Customer care live chat">
+            <header className="customer-care-header"><div><span className="customer-care-kicker">KEYRACOMICS</span><h2>Customer care</h2></div><button type="button" onClick={() => setIsOpen(false)} aria-label="Close customer care">×</button></header>
+            {!user ? <div className="care-login-required"><span aria-hidden="true">🔒</span><h3>Log in to start a chat</h3><p>Customer care chat is available to registered KeyraComics customers.</p><button type="button" onClick={() => { setIsOpen(false); navigate("/login"); }}>Log in</button></div> :
+                <div className="customer-care-chat">
+                    <div className={`care-connection-status ${chat?.status || "new"}`}><span aria-hidden="true" />{chat?.status === "active" ? "Admin connected" : "Connecting you to a KeyraComics admin…"}</div>
+                    <div className="care-messages" aria-label="Chat messages">
+                        {!messages.length && <p className="care-welcome">Send your question below. An admin will be notified and will join this chat.</p>}
+                        {messages.map((message) => <div className={`care-message ${message.sender_role}`} key={message.id}><strong>{message.sender_role === "admin" ? "Keyra Admin" : "You"}</strong><p>{message.message}</p><small>{new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></div>)}
+                        <div ref={messagesEndRef} />
+                    </div>
+                    {error && <p className="care-error">{error}</p>}
+                    <form className="care-input" onSubmit={sendMessage}><label className="sr-only" htmlFor="care-message-input">Message customer care</label><input id="care-message-input" maxLength="2000" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Type your message…" autoComplete="off" /><button type="submit" disabled={sending || !input.trim()}>{sending ? "…" : "Send"}</button></form>
+                </div>}
+        </section>}
+        <button className="customer-care-launcher" type="button" aria-label={isOpen ? "Close customer care" : "Open customer care"} aria-expanded={isOpen} onClick={() => setIsOpen((open) => !open)}><span aria-hidden="true">{isOpen ? "×" : "?"}</span><strong>{isOpen ? "Close" : "Customer care"}</strong></button>
+    </aside>;
 }
 
 export default CustomerCare;
