@@ -2,6 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import "./CustomerCare.css";
+import "./CustomerCareQuestions.css";
+
+const primaryQuestions = [
+    "How do I read a purchased comic?",
+    "What payment methods can I use?",
+    "Why is my purchase missing from Library?",
+    "How can I get help with login?",
+    "How do I request a refund?"
+];
+const whatsappNumber = String(import.meta.env.VITE_WHATSAPP_NUMBER || "").replace(/\D/g, "");
+const whatsappUrl = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hello KeyraComics, I need customer care support.")}`
+    : "#";
 
 function CustomerCare() {
     const navigate = useNavigate();
@@ -66,6 +79,7 @@ function CustomerCare() {
     return <aside className="customer-care" aria-live="polite">
         {isOpen && <section className="customer-care-panel" aria-label="Customer care live chat">
             <header className="customer-care-header"><div><span className="customer-care-kicker">KEYRACOMICS</span><h2>Customer care</h2></div><button type="button" onClick={() => setIsOpen(false)} aria-label="Close customer care">×</button></header>
+            <a className={`care-whatsapp-button${whatsappNumber ? "" : " unavailable"}`} href={whatsappUrl} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined} onClick={(event) => { if (!whatsappNumber) { event.preventDefault(); setError("WhatsApp customer care is being configured."); } }}><span aria-hidden="true">●</span> Chat on WhatsApp</a>
             {!user ? <div className="care-login-required"><span aria-hidden="true">🔒</span><h3>Log in to start a chat</h3><p>Customer care chat is available to registered KeyraComics customers.</p><button type="button" onClick={() => { setIsOpen(false); navigate("/login"); }}>Log in</button></div> :
                 <div className="customer-care-chat">
                     <div className={`care-connection-status ${notice ? "resolved" : (chat?.status || "new")}`}><span aria-hidden="true" />{notice ? "Chat closed" : chat?.status === "active" ? "Admin connected" : "Connecting you to a KeyraComics admin…"}</div>
@@ -75,6 +89,10 @@ function CustomerCare() {
                         <div ref={messagesEndRef} />
                     </div>
                     {error && <p className="care-error">{error}</p>}
+                    <div className="care-primary-questions" aria-label="Primary customer care questions">
+                        <strong>Primary questions</strong>
+                        <div>{primaryQuestions.map((question) => <button type="button" key={question} onClick={() => setInput(question)}>{question}</button>)}</div>
+                    </div>
                     <form className="care-input" onSubmit={sendMessage}><label className="sr-only" htmlFor="care-message-input">Message customer care</label><input id="care-message-input" maxLength="2000" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Type your message…" autoComplete="off" /><button type="submit" disabled={sending || !input.trim()}>{sending ? "…" : "Send"}</button></form>
                 </div>}
         </section>}

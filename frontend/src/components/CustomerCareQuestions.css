@@ -1,0 +1,65 @@
+.care-whatsapp-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 3px solid #18140f;
+    background: #25d366;
+    color: #18140f;
+    font-size: 12px;
+    font-weight: 900;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.care-whatsapp-button span {
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.care-whatsapp-button:hover {
+    background: #1fbd5a;
+}
+
+.care-whatsapp-button.unavailable {
+    background: #b8b1a4;
+}
+
+.care-primary-questions {
+    padding: 10px 14px;
+    border-top: 2px solid #18140f;
+    background: #fffaf0;
+}
+
+.care-primary-questions > strong {
+    display: block;
+    margin-bottom: 7px;
+    font-family: "Space Mono", monospace;
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.care-primary-questions > div {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 3px;
+}
+
+.care-primary-questions button {
+    flex: 0 0 auto;
+    padding: 6px 9px;
+    border: 2px solid #18140f;
+    background: #e9ff45;
+    color: #18140f;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.care-primary-questions button:hover {
+    background: #eeb023;
+}
