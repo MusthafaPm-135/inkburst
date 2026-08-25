@@ -12,6 +12,7 @@ import AdminRoute from "./components/AdminRoute";
 import RequireAuth from "./components/RequireAuth";
 import GoogleCallback from "./pages/GoogleCallback";
 import CustomerCare from "./components/CustomerCare";
+import "./styles/KeyraNext.css";
 
 function App() {
     return (
