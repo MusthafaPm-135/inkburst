@@ -10,6 +10,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import GoogleAuthCallback from "./pages/GoogleAuthCallback";
 import AdminRoute from "./components/AdminRoute";
 import RequireAuth from "./components/RequireAuth";
+import GoogleCallback from "./pages/GoogleCallback";
 
 function App() {
     return (
@@ -19,6 +20,11 @@ function App() {
                 <Route path="/" element={<Home />} />
 
                 <Route path="/login" element={<Login />} />
+
+                <Route
+                    path="/auth/google/callback"
+                    element={<GoogleCallback />}
+                />
 
                 <Route path="/register" element={<Register />} />
 
