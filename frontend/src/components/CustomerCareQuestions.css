@@ -1,10 +1,10 @@
 .customer-care-panel {
-    width: min(500px, calc(100vw - 32px));
-    height: min(720px, calc(100vh - 110px));
+    width: min(460px, calc(100vw - 32px));
+    height: min(680px, calc(100vh - 110px));
 }
 
 .care-messages {
-    min-height: 210px;
+    min-height: 0;
 }
 
 .care-whatsapp-button {
@@ -52,21 +52,19 @@
 }
 
 .care-primary-questions > div {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 3px;
 }
 
 .care-primary-questions button {
-    flex: 0 0 auto;
     padding: 6px 9px;
     border: 2px solid #18140f;
     background: #e9ff45;
     color: #18140f;
     font-size: 10px;
     font-weight: 800;
-    white-space: nowrap;
+    line-height: 1.25;
 }
 
 .care-primary-questions button:hover {
@@ -76,18 +74,21 @@
 .care-input {
     width: 100%;
     box-sizing: border-box;
-    grid-template-columns: minmax(0, 1fr) auto;
+    display: flex;
+    align-items: stretch;
 }
 
 .care-input input {
-    width: 100%;
+    width: 0;
     min-width: 0;
+    flex: 1 1 0;
     box-sizing: border-box;
 }
 
 .care-input button {
     display: block;
-    min-width: 66px;
+    flex: 0 0 72px;
+    min-width: 72px;
 }
 
 @media (max-width: 520px) {
@@ -96,7 +97,9 @@
         height: min(680px, calc(100vh - 90px));
     }
 
-    .care-messages {
-        min-height: 150px;
+    .care-primary-questions > div {
+        grid-template-columns: 1fr;
+        max-height: 92px;
+        overflow-y: auto;
     }
 }
