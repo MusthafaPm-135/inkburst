@@ -71,6 +71,13 @@ router.post("/messages", async (req, res) => {
         let chat = chats[0];
         let isNewChat = false;
 
+        if (message.toLowerCase() === "/close") {
+            if (chat) {
+                await query("UPDATE support_chats SET status = 'resolved', updated_at = CURRENT_TIMESTAMP WHERE id = ?", [chat.id]);
+            }
+            return res.json({ success: true, closed: true, message: "Chat closed." });
+        }
+
         if (!chat) {
             const result = await query("INSERT INTO support_chats (user_id) VALUES (?)", [req.user.id]);
             chat = { id: result.insertId, status: "waiting" };
@@ -138,6 +145,10 @@ router.post("/admin/chats/:id/messages", admin, async (req, res) => {
     try {
         const chats = await query("SELECT id FROM support_chats WHERE id = ? LIMIT 1", [req.params.id]);
         if (!chats.length) return res.status(404).json({ success: false, message: "Chat not found." });
+        if (message.toLowerCase() === "/close") {
+            await query("UPDATE support_chats SET status = 'resolved', updated_at = CURRENT_TIMESTAMP WHERE id = ?", [req.params.id]);
+            return res.json({ success: true, closed: true, message: "Chat closed." });
+        }
         const result = await query(
             "INSERT INTO support_messages (chat_id, sender_id, sender_role, message) VALUES (?, ?, 'admin', ?)",
             [req.params.id, req.user.id, message]

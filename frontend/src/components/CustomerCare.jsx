@@ -10,6 +10,7 @@ function CustomerCare() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [error, setError] = useState("");
+    const [notice, setNotice] = useState("");
     const [sending, setSending] = useState(false);
     const messagesEndRef = useRef(null);
     const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -43,9 +44,16 @@ function CustomerCare() {
         if (!message || sending) return;
         setSending(true);
         setError("");
+        setNotice("");
         try {
             const response = await API.post("/support/messages", { message });
             setInput("");
+            if (response.data.closed) {
+                setChat(null);
+                setMessages([]);
+                setNotice("Chat closed. Send another message whenever you need to start a new conversation.");
+                return;
+            }
             setChat(response.data.chat);
             setMessages((current) => [...current, response.data.message]);
         } catch (requestError) {
@@ -60,9 +68,9 @@ function CustomerCare() {
             <header className="customer-care-header"><div><span className="customer-care-kicker">KEYRACOMICS</span><h2>Customer care</h2></div><button type="button" onClick={() => setIsOpen(false)} aria-label="Close customer care">×</button></header>
             {!user ? <div className="care-login-required"><span aria-hidden="true">🔒</span><h3>Log in to start a chat</h3><p>Customer care chat is available to registered KeyraComics customers.</p><button type="button" onClick={() => { setIsOpen(false); navigate("/login"); }}>Log in</button></div> :
                 <div className="customer-care-chat">
-                    <div className={`care-connection-status ${chat?.status || "new"}`}><span aria-hidden="true" />{chat?.status === "active" ? "Admin connected" : "Connecting you to a KeyraComics admin…"}</div>
+                    <div className={`care-connection-status ${notice ? "resolved" : (chat?.status || "new")}`}><span aria-hidden="true" />{notice ? "Chat closed" : chat?.status === "active" ? "Admin connected" : "Connecting you to a KeyraComics admin…"}</div>
                     <div className="care-messages" aria-label="Chat messages">
-                        {!messages.length && <p className="care-welcome">Send your question below. An admin will be notified and will join this chat.</p>}
+                        {!messages.length && <p className="care-welcome">{notice || "Send your question below. An admin will be notified and will join this chat. Type /close at any time to close the conversation."}</p>}
                         {messages.map((message) => <div className={`care-message ${message.sender_role}`} key={message.id}><strong>{message.sender_role === "admin" ? "Keyra Admin" : "You"}</strong><p>{message.message}</p><small>{new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></div>)}
                         <div ref={messagesEndRef} />
                     </div>
