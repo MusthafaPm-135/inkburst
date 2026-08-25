@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BrandMark from "./BrandMark";
 import API from "../api/axios";
+import ThemeToggle from "./ThemeToggle";
 
 function Navbar() {
     const navigate = useNavigate();
@@ -89,6 +90,7 @@ function Navbar() {
             </div>
 
             <div className="nav-actions">
+                <ThemeToggle />
                 {user ? (
                     <>
                         <span className="mono">
