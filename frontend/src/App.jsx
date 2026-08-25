@@ -11,6 +11,7 @@ import GoogleAuthCallback from "./pages/GoogleAuthCallback";
 import AdminRoute from "./components/AdminRoute";
 import RequireAuth from "./components/RequireAuth";
 import GoogleCallback from "./pages/GoogleCallback";
+import CustomerCare from "./components/CustomerCare";
 
 function App() {
     return (
@@ -41,6 +42,7 @@ function App() {
                 </Route>
 
             </Routes>
+            <CustomerCare />
         </BrowserRouter>
     );
 }
