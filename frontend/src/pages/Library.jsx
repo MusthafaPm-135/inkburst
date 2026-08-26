@@ -5,7 +5,7 @@ import "./Storefront.css";
 
 function Library() {
     const [orders, setOrders] = useState([]); const [message, setMessage] = useState(""); const [loading, setLoading] = useState(true); const [readingId, setReadingId] = useState(null);
-    useEffect(() => { API.get("/orders").then((response) => setOrders(response.data.orders)).catch((error) => setMessage(error.response?.data?.message || "Could not load your library.")).finally(() => setLoading(false)); }, []);
+    useEffect(() => { API.post("/orders/recover").catch(() => null).finally(() => { API.get("/orders").then((response) => setOrders(response.data.orders)).catch((error) => setMessage(error.response?.data?.message || "Could not load your library.")).finally(() => setLoading(false)); }); }, []);
     
     const getCoverUrl = (cover) => {
         if (!cover) return "";
