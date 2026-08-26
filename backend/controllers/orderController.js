@@ -1,6 +1,8 @@
 const db = require("../config/db");
 const path = require("path");
+const https = require("https");
 const crypto = require("crypto");
+const cloudinary = require("../config/cloudinary");
 const Razorpay = require("razorpay");
 const { sendPurchaseInvoice } = require("../services/invoiceEmailService");
 const { calculateCoupon } = require("../services/couponService");
@@ -357,6 +359,29 @@ exports.getOrders = (req, res) => {
 // ==========================================
 // READ PURCHASED COMIC
 // ==========================================
+const streamCloudinaryPdf = (res, publicId) => {
+    const signedUrl = cloudinary.url(publicId, {
+        resource_type: "raw",
+        type: "authenticated",
+        sign_url: true,
+        expires_at: Math.floor(Date.now() / 1000) + (5 * 60)
+    });
+
+    https.get(signedUrl, (fileResponse) => {
+        if (fileResponse.statusCode !== 200) {
+            fileResponse.resume();
+            return res.status(502).json({ success: false, message: "The comic file could not be loaded." });
+        }
+        res.setHeader("Content-Type", fileResponse.headers["content-type"] || "application/pdf");
+        res.setHeader("Content-Disposition", "inline");
+        fileResponse.pipe(res);
+    }).on("error", (error) => {
+        console.error("Cloud PDF stream failed:", error);
+        if (!res.headersSent) return res.status(502).json({ success: false, message: "The comic file could not be loaded." });
+        res.end();
+    });
+};
+
 exports.readComic = (req, res) => {
 
     const userId = req.user.id;
@@ -395,15 +420,18 @@ exports.readComic = (req, res) => {
                 });
             }
 
-            const pdfPath = path.join(
-                __dirname,
-                "../uploads/pdfs",
-                result[0].pdf_file
-            );
+            const storedPdf = result[0].pdf_file;
+            if (storedPdf?.startsWith("cloudinary:")) {
+                return streamCloudinaryPdf(res, storedPdf.slice("cloudinary:".length));
+            }
 
+            const pdfPath = path.join(__dirname, "../uploads/pdfs", storedPdf);
             console.log("Opening PDF:", pdfPath);
-
-            res.sendFile(pdfPath);
+            return res.sendFile(pdfPath, (sendError) => {
+                if (sendError && !res.headersSent) {
+                    return res.status(404).json({ success: false, message: "This comic file is no longer available. Please contact support." });
+                }
+            });
 
         }
     );
