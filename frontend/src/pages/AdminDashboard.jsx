@@ -13,6 +13,7 @@ function AdminDashboard() {
     const [stats, setStats] = useState(null);
     const [comics, setComics] = useState([]);
     const [usersList, setUsersList] = useState([]);
+    const [accessLogs, setAccessLogs] = useState([]);
     const [coupons, setCoupons] = useState([]);
     const [couponForm, setCouponForm] = useState({ code: "", discount_type: "percent", discount_value: "", min_order: "0", max_discount: "", usage_limit: "", expires_at: "" });
     const [form, setForm] = useState(emptyComic);
@@ -41,10 +42,11 @@ function AdminDashboard() {
     const loadDashboard = async () => {
         setLoading(true);
         try {
-            const [statsResponse, comicList, usersResponse] = await Promise.all([
+            const [statsResponse, comicList, usersResponse, accessResponse] = await Promise.all([
                 API.get("/admin/stats").catch(() => ({ data: { stats: null } })),
                 getComics(),
-                API.get("/admin/users").catch(() => ({ data: { users: [] } }))
+                API.get("/admin/users").catch(() => ({ data: { users: [] } })),
+                API.get("/admin/comic-access").catch(() => ({ data: { logs: [] } }))
             ]);
 
             const fetchedComics = comicList || [];
@@ -53,6 +55,7 @@ function AdminDashboard() {
 
             setComics(fetchedComics);
             setUsersList(fetchedUsers);
+            setAccessLogs(accessResponse.data?.logs || []);
             setStats({
                 total_comics: Math.max(baseStats.total_comics || 0, fetchedComics.length),
                 total_users: Math.max(baseStats.total_users || 0, fetchedUsers.length),
@@ -242,6 +245,10 @@ function AdminDashboard() {
 
         <AdminSupport />
 
+        <section className="admin-panel"><div className="panel-heading"><div><h2>Comic access history</h2><p>Latest 200 reader events. Every delivered PDF includes the buyer and order number.</p></div></div>
+            {!accessLogs.length ? <p>{loading ? "Loading access history…" : "No delivered comics have been read yet."}</p> : <div className="admin-users-table-wrap"><table className="admin-users-table"><thead><tr><th>When</th><th>Customer</th><th>Comic</th><th>IP</th><th>Watermark</th></tr></thead><tbody>{accessLogs.map((log) => <tr key={log.id}><td className="user-date">{new Date(log.accessed_at).toLocaleString()}</td><td><strong>{log.username}</strong><br /><span className="user-email">{log.email}</span></td><td>{log.title}</td><td className="user-id">{log.ip_address || "—"}</td><td className="user-id">{log.watermark_label}</td></tr>)}</tbody></table></div>}
+        </section>
+
         <section className="admin-panel">
             <div className="panel-heading">
                 <div>
@@ -288,3 +295,4 @@ function AdminDashboard() {
 }
 
 export default AdminDashboard;
+
