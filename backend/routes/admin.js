@@ -85,6 +85,18 @@ const uploadCoverToCloudinary = async (file) => {
 
 const isRemoteUrl = (value) => /^https?:\/\//i.test(value || "");
 
+const uploadPdfToCloudinary = async (file) => {
+    const result = await cloudinary.uploader.upload(file.path, {
+        folder: "keyra-comics/pdfs",
+        resource_type: "raw",
+        type: "authenticated",
+        use_filename: true,
+        unique_filename: true
+    });
+    fs.unlink(file.path, () => {});
+    return `cloudinary:${result.public_id}`;
+};
+
 // =============================
 // Test Route
 // =============================
@@ -224,12 +236,14 @@ router.post(
         }
 
         let coverImage;
-        const pdfFile = req.files.pdf_file[0].filename;
+        let pdfFile;
 
         try {
             coverImage = await uploadCoverToCloudinary(req.files.cover_image[0]);
+            pdfFile = await uploadPdfToCloudinary(req.files.pdf_file[0]);
         } catch (error) {
-            return res.status(500).json({ success: false, message: "Could not upload the cover image." });
+            console.error("Cloud upload failed:", error);
+            return res.status(500).json({ success: false, message: "Could not securely store the comic files." });
         }
 
         db.query(
@@ -308,7 +322,7 @@ router.put(
         db.query(
             "SELECT cover_image, pdf_file FROM comics WHERE id = ?",
             [req.params.id],
-            (findErr, comics) => {
+            async (findErr, comics) => {
                 if (findErr) {
                     return res.status(500).json({ success: false, error: findErr.message });
                 }
@@ -318,8 +332,20 @@ router.put(
                 }
 
                 const existingComic = comics[0];
-                const coverImage = req.files?.cover_image?.[0]?.filename || existingComic.cover_image;
-                const pdfFile = req.files?.pdf_file?.[0]?.filename || existingComic.pdf_file;
+                let coverImage = existingComic.cover_image;
+                let pdfFile = existingComic.pdf_file;
+
+                try {
+                    if (req.files?.cover_image?.[0]) {
+                        coverImage = await uploadCoverToCloudinary(req.files.cover_image[0]);
+                    }
+                    if (req.files?.pdf_file?.[0]) {
+                        pdfFile = await uploadPdfToCloudinary(req.files.pdf_file[0]);
+                    }
+                } catch (error) {
+                    console.error("Cloud update failed:", error);
+                    return res.status(500).json({ success: false, message: "Could not securely store the updated files." });
+                }
 
                 db.query(
                     `UPDATE comics
@@ -331,17 +357,8 @@ router.put(
                             return res.status(500).json({ success: false, error: updateErr.message });
                         }
 
-                        const replacements = [
-                            [req.files?.cover_image?.[0], existingComic.cover_image, coverDir],
-                            [req.files?.pdf_file?.[0], existingComic.pdf_file, pdfDir]
-                        ];
-
-                        replacements.forEach(([newFile, oldFilename, directory]) => {
-                            if (newFile && oldFilename) {
-                                fs.unlink(path.join(directory, oldFilename), () => {});
-                            }
-                        });
-
+                        // New files were removed from Render after the Cloudinary upload.
+                        // Existing local files are retained so older purchases keep working.
                         res.json({ success: true, message: "Comic updated successfully" });
                     }
                 );
