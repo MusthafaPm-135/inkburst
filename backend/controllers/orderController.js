@@ -360,12 +360,9 @@ exports.getOrders = (req, res) => {
 // READ PURCHASED COMIC
 // ==========================================
 const streamCloudinaryPdf = (res, storedPublicId) => {
-    // Raw Cloudinary assets retain their file extension in the public ID. The
-    // private download API expects the ID and format separately.
-    const extensionMatch = storedPublicId.match(/^(.*)\.([^.\/]+)$/);
-    const publicId = extensionMatch ? extensionMatch[1] : storedPublicId;
-    const format = extensionMatch ? extensionMatch[2] : "pdf";
-    const downloadUrl = cloudinary.utils.private_download_url(publicId, format, {
+    // For raw Cloudinary assets, the extension is part of the public ID.
+    // Keep it intact while also declaring the download format.
+    const downloadUrl = cloudinary.utils.private_download_url(storedPublicId, "pdf", {
         resource_type: "raw",
         type: "authenticated",
         expires_at: Math.floor(Date.now() / 1000) + (5 * 60)
