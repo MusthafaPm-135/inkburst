@@ -190,6 +190,17 @@ router.get("/users", (req, res) => {
     );
 });
 
+router.get("/comic-access", (req, res) => {
+    db.query(`SELECT logs.id, logs.accessed_at, logs.ip_address, logs.watermark_label,
+                     users.username, users.email, comics.title
+              FROM comic_access_logs logs JOIN users ON users.id = logs.user_id
+              JOIN comics ON comics.id = logs.comic_id
+              ORDER BY logs.accessed_at DESC LIMIT 200`, (err, logs) => {
+        if (err) return res.status(500).json({ success: false, message: "No access history is available yet." });
+        return res.json({ success: true, logs });
+    });
+});
+
 // =============================
 // Upload Comic
 // =============================
@@ -410,3 +421,4 @@ router.use((err, req, res, next) => {
 });
 
 module.exports = router;
+
