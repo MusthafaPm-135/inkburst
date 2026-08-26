@@ -9,6 +9,7 @@ const admin = require("../middleware/admin");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { PDFDocument, StandardFonts, rgb } = require("pdf-lib");
 
 // =============================
 // Create upload folders if missing
@@ -83,7 +84,27 @@ const uploadCoverToCloudinary = async (file) => {
     return result.secure_url;
 };
 
-const isRemoteUrl = (value) => /^https?:\/\//i.test(value || "");
+const isRemoteUrl = (value) => /^https?:\/\\//i.test(value || "");
+
+const invoicePdf = async (order) => {
+    const document = await PDFDocument.create(); const page = document.addPage([595.28, 841.89]);
+    const regular = await document.embedFont(StandardFonts.Helvetica); const bold = await document.embedFont(StandardFonts.HelveticaBold);
+    const text = (value, x, y, size = 11, font = regular, color = rgb(0.12, 0.1, 0.17)) => page.drawText(String(value || ""), { x, y, size, font, color });
+    const money = `INR ${Number(order.price).toFixed(2)}`;
+    text("KEYRA COMICS", 48, 780, 24, bold); text("DIGITAL COMIC PURCHASE INVOICE", 48, 758, 9, bold, rgb(0.72, 0.1, 0.25));
+    page.drawLine({ start: { x: 48, y: 738 }, end: { x: 547, y: 738 }, thickness: 1, color: rgb(0.8, 0.78, 0.83) });
+    text("Billed to", 48, 704, 10, bold); text(order.username || "Customer", 48, 684); text(order.email || "", 48, 666, 10);
+    text("Invoice", 370, 704, 10, bold); text(`KEYRA-${order.id}`, 370, 684); text("Purchase date", 370, 654, 10, bold);
+    text(new Date(order.purchased_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }), 370, 636, 9);
+    page.drawRectangle({ x: 48, y: 540, width: 499, height: 56, color: rgb(0.97, 0.96, 0.98), borderColor: rgb(0.82, 0.8, 0.85), borderWidth: 1 });
+    text("Comic", 62, 576, 9, bold); text("Author", 275, 576, 9, bold); text("Amount", 467, 576, 9, bold);
+    text(order.title, 62, 552, 11, bold); text(order.author || "Keyra Comics", 275, 552); text(money, 467, 552, 11, bold);
+    text("Amount paid", 360, 490, 13, bold); text(money, 467, 490, 13, bold);
+    page.drawLine({ start: { x: 360, y: 482 }, end: { x: 547, y: 482 }, thickness: 1.2, color: rgb(0.12, 0.1, 0.17) });
+    text("Payment status: PAID", 48, 418, 11, bold, rgb(0.1, 0.35, 0.15));
+    text("This invoice confirms access to a digital comic purchased from Keyra Comics.", 48, 92, 9, regular, rgb(0.35, 0.32, 0.4));
+    return Buffer.from(await document.save());
+};
 
 const uploadPdfToCloudinary = async (file) => {
     const result = await cloudinary.uploader.upload(file.path, {
@@ -204,6 +225,22 @@ router.get("/comic-access", (req, res) => {
 // =============================
 // Upload Comic
 // =============================
+
+router.get("/orders", (req, res) => {
+    db.query(`SELECT orders.id, orders.price, orders.payment_status, orders.purchased_at, users.username, users.email, comics.title, comics.author FROM orders JOIN users ON users.id = orders.user_id JOIN comics ON comics.id = orders.comic_id WHERE orders.payment_status = 'Paid' ORDER BY orders.purchased_at DESC LIMIT 200`, (err, orders) => {
+        if (err) return res.status(500).json({ success: false, message: "Could not load orders." });
+        return res.json({ success: true, orders });
+    });
+});
+router.get("/orders/:id/invoice", (req, res) => {
+    db.query(`SELECT orders.id, orders.price, orders.purchased_at, users.username, users.email, comics.title, comics.author FROM orders JOIN users ON users.id = orders.user_id JOIN comics ON comics.id = orders.comic_id WHERE orders.id = ? AND orders.payment_status = 'Paid' LIMIT 1`, [req.params.id], async (err, orders) => {
+        if (err) return res.status(500).json({ success: false, message: "Could not create invoice." });
+        if (!orders.length) return res.status(404).json({ success: false, message: "Paid order not found." });
+        try { const pdf = await invoicePdf(orders[0]); res.setHeader("Content-Type", "application/pdf"); res.setHeader("Content-Disposition", `attachment; filename="keyra-invoice-${orders[0].id}.pdf"`); return res.send(pdf); }
+        catch (error) { console.error("Invoice PDF failed:", error.message); return res.status(500).json({ success: false, message: "Could not create invoice." }); }
+    });
+});
+
 router.post(
     "/comics",
     upload.fields([
