@@ -14,6 +14,7 @@ function AdminDashboard() {
     const [comics, setComics] = useState([]);
     const [usersList, setUsersList] = useState([]);
     const [accessLogs, setAccessLogs] = useState([]);
+    const [orders, setOrders] = useState([]);
     const [coupons, setCoupons] = useState([]);
     const [couponForm, setCouponForm] = useState({ code: "", discount_type: "percent", discount_value: "", min_order: "0", max_discount: "", usage_limit: "", expires_at: "" });
     const [form, setForm] = useState(emptyComic);
@@ -42,11 +43,12 @@ function AdminDashboard() {
     const loadDashboard = async () => {
         setLoading(true);
         try {
-            const [statsResponse, comicList, usersResponse, accessResponse] = await Promise.all([
+            const [statsResponse, comicList, usersResponse, accessResponse, ordersResponse] = await Promise.all([
                 API.get("/admin/stats").catch(() => ({ data: { stats: null } })),
                 getComics(),
                 API.get("/admin/users").catch(() => ({ data: { users: [] } })),
-                API.get("/admin/comic-access").catch(() => ({ data: { logs: [] } }))
+                API.get("/admin/comic-access").catch(() => ({ data: { logs: [] } })),
+                API.get("/admin/orders").catch(() => ({ data: { orders: [] } }))
             ]);
 
             const fetchedComics = comicList || [];
@@ -56,6 +58,7 @@ function AdminDashboard() {
             setComics(fetchedComics);
             setUsersList(fetchedUsers);
             setAccessLogs(accessResponse.data?.logs || []);
+            setOrders(ordersResponse.data?.orders || []);
             setStats({
                 total_comics: Math.max(baseStats.total_comics || 0, fetchedComics.length),
                 total_users: Math.max(baseStats.total_users || 0, fetchedUsers.length),
@@ -183,6 +186,16 @@ function AdminDashboard() {
         loadDashboard();
     };
 
+    const downloadInvoice = async (order) => {
+        try {
+            const response = await API.get(`/admin/orders/${order.id}/invoice`, { responseType: "blob" });
+            const url = URL.createObjectURL(response.data);
+            const link = document.createElement("a");
+            link.href = url; link.download = `keyra-invoice-${order.id}.pdf`; link.click();
+            URL.revokeObjectURL(url);
+        } catch (error) { setMessage(error.response?.data?.message || "Could not generate invoice PDF."); }
+    };
+
     const logout = async () => {
         try { await API.post("/auth/logout"); } catch { /* clear local session either way */ }
         localStorage.removeItem("token");
@@ -241,6 +254,10 @@ function AdminDashboard() {
                 <button className="primary-button" type="submit">Create coupon</button>
             </form>
             <div className="coupon-admin-list">{coupons.map((coupon) => <article key={coupon.id}><div><strong>{coupon.code}</strong><span>{coupon.discount_type === "percent" ? `${Number(coupon.discount_value)}% off` : `₹${Number(coupon.discount_value).toFixed(2)} off`} · used {coupon.used_count}{coupon.usage_limit ? `/${coupon.usage_limit}` : ""}</span></div><span className={coupon.active ? "coupon-live" : "coupon-off"}>{coupon.active ? "Active" : "Paused"}</span><button className="secondary-button" type="button" onClick={() => toggleCoupon(coupon.id)}>{coupon.active ? "Pause" : "Enable"}</button><button className="danger-button" type="button" onClick={() => deleteCoupon(coupon.id)}>Delete</button></article>)}{!coupons.length && <p>No coupons created yet.</p>}</div>
+        </section>
+
+        <section className="admin-panel"><div className="panel-heading"><div><h2>Manual invoice PDFs</h2><p>Download a paid order invoice, then send it yourself.</p></div></div>
+            {!orders.length ? <p>{loading ? "Loading paid orders…" : "No paid orders yet."}</p> : <div className="admin-users-table-wrap"><table className="admin-users-table"><thead><tr><th>Order</th><th>Customer</th><th>Comic</th><th>Paid</th><th></th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td className="user-id">#{order.id}<br /><span className="user-date">{new Date(order.purchased_at).toLocaleDateString()}</span></td><td><strong>{order.username}</strong><br /><span className="user-email">{order.email}</span></td><td>{order.title}</td><td>₹{Number(order.price).toFixed(2)}</td><td><button type="button" className="primary-button" onClick={() => downloadInvoice(order)}>Download PDF</button></td></tr>)}</tbody></table></div>}
         </section>
 
         <AdminSupport />
