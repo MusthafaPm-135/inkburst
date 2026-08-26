@@ -23,9 +23,11 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
     "mysql2": "^3.23.1",
+    "pdf-lib": "^1.17.1",
     "razorpay": "^2.9.8"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
   }
 }
+
