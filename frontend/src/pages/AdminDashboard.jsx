@@ -60,10 +60,12 @@ function AdminDashboard() {
             setAccessLogs(accessResponse.data?.logs || []);
             setOrders(ordersResponse.data?.orders || []);
             setStats({
-                total_comics: Math.max(baseStats.total_comics || 0, fetchedComics.length),
-                total_users: Math.max(baseStats.total_users || 0, fetchedUsers.length),
-                total_orders: baseStats.total_orders || 0,
-                total_revenue: baseStats.total_revenue || 0,
+                // The backend returns camelCase fields. Map them to the
+                // state names this component uses for the stat cards.
+                total_comics: Math.max(Number(baseStats.totalComics ?? baseStats.total_comics ?? 0), fetchedComics.length),
+                total_users: Math.max(Number(baseStats.totalUsers ?? baseStats.total_users ?? 0), fetchedUsers.length),
+                total_orders: Number(baseStats.totalOrders ?? baseStats.total_orders ?? 0),
+                total_revenue: Number(baseStats.totalRevenue ?? baseStats.total_revenue ?? 0),
             });
         } catch {
             const localComics = await getComics();
