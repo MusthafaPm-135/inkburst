@@ -2,6 +2,7 @@ const db = require("../config/db");
 const path = require("path");
 const https = require("https");
 const crypto = require("crypto");
+const { PDFDocument, StandardFonts, rgb, degrees } = require("pdf-lib");
 const cloudinary = require("../config/cloudinary");
 const Razorpay = require("razorpay");
 const { sendPurchaseInvoice } = require("../services/invoiceEmailService");
@@ -22,6 +23,25 @@ const getCartItems = (userId) => query(
      WHERE cart.user_id = ?`,
     [userId]
 );
+
+let accessLogTableReady;
+const ensureAccessLogTable = () => {
+    if (!accessLogTableReady) accessLogTableReady = query(`CREATE TABLE IF NOT EXISTS comic_access_logs (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL,
+        comic_id INT NOT NULL, order_id INT NOT NULL, ip_address VARCHAR(45) NULL,
+        user_agent VARCHAR(512) NULL, watermark_label VARCHAR(255) NOT NULL,
+        accessed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX comic_access_logs_comic_accessed (comic_id, accessed_at)
+    )`);
+    return accessLogTableReady;
+};
+const clientIp = (req) => String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim().slice(0, 45);
+const logComicAccess = async (req, purchase, watermarkLabel) => {
+    await ensureAccessLogTable();
+    await query(`INSERT INTO comic_access_logs (user_id, comic_id, order_id, ip_address, user_agent, watermark_label)
+        VALUES (?, ?, ?, ?, ?, ?)`, [req.user.id, purchase.comic_id, purchase.order_id, clientIp(req),
+        String(req.get("user-agent") || "").slice(0, 512), watermarkLabel.slice(0, 255)]);
+};
 
 console.log("✅ USING orderController.js - UPDATED VERSION");
 
@@ -359,7 +379,7 @@ exports.getOrders = (req, res) => {
 // ==========================================
 // READ PURCHASED COMIC
 // ==========================================
-const streamCloudinaryPdf = (res, storedPublicId) => {
+const downloadCloudinaryPdf = (storedPublicId) => new Promise((resolve, reject) => {
     // For raw Cloudinary assets, the extension is part of the public ID.
     // Keep it intact while also declaring the download format.
     const downloadUrl = cloudinary.utils.private_download_url(storedPublicId, "pdf", {
@@ -372,16 +392,22 @@ const streamCloudinaryPdf = (res, storedPublicId) => {
         if (fileResponse.statusCode !== 200) {
             console.error("Cloud PDF download failed:", fileResponse.statusCode, fileResponse.headers["x-cld-error"] || "");
             fileResponse.resume();
-            return res.status(502).json({ success: false, message: "The comic file could not be loaded." });
+            return reject(new Error("Cloudinary could not find the comic file."));
         }
-        res.setHeader("Content-Type", fileResponse.headers["content-type"] || "application/pdf");
-        res.setHeader("Content-Disposition", "inline");
-        fileResponse.pipe(res);
-    }).on("error", (error) => {
-        console.error("Cloud PDF stream failed:", error);
-        if (!res.headersSent) return res.status(502).json({ success: false, message: "The comic file could not be loaded." });
-        res.end();
+        const chunks = [];
+        fileResponse.on("data", (chunk) => chunks.push(chunk));
+        fileResponse.on("end", () => resolve(Buffer.concat(chunks)));
+    }).on("error", reject);
+});
+
+const watermarkPdf = async (pdfBuffer, watermarkLabel) => {
+    const document = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
+    const font = await document.embedFont(StandardFonts.HelveticaBold);
+    document.getPages().forEach((page) => {
+        const { width, height } = page.getSize();
+        page.drawText(watermarkLabel, { x: width * 0.08, y: height * 0.08, size: Math.max(8, Math.min(13, width / 42)), font, color: rgb(0.55, 0.05, 0.05), opacity: 0.42, rotate: degrees(35) });
     });
+    return Buffer.from(await document.save());
 };
 
 exports.readComic = (req, res) => {
@@ -394,15 +420,16 @@ exports.readComic = (req, res) => {
     console.log("Comic:", comicId);
 
     db.query(
-        `SELECT comics.pdf_file
+        `SELECT comics.pdf_file, comics.id AS comic_id, orders.id AS order_id, users.email, users.username
          FROM orders
          JOIN comics
          ON orders.comic_id = comics.id
+         JOIN users ON orders.user_id = users.id
          WHERE orders.user_id = ?
          AND orders.comic_id = ?
          AND orders.payment_status = 'Paid'`,
         [userId, comicId],
-        (err, result) => {
+        async (err, result) => {
 
             console.log("READ RESULT:", result);
 
@@ -424,7 +451,20 @@ exports.readComic = (req, res) => {
 
             const storedPdf = result[0].pdf_file;
             if (storedPdf?.startsWith("cloudinary:")) {
-                return streamCloudinaryPdf(res, storedPdf.slice("cloudinary:".length));
+                const purchase = result[0];
+                const watermarkLabel = `Licensed to ${purchase.email || purchase.username || `User ${userId}`} | Order #${purchase.order_id}`;
+                try {
+                    const sourcePdf = await downloadCloudinaryPdf(storedPdf.slice("cloudinary:".length));
+                    const watermarkedPdf = await watermarkPdf(sourcePdf, watermarkLabel);
+                    await logComicAccess(req, purchase, watermarkLabel);
+                    res.setHeader("Content-Type", "application/pdf");
+                    res.setHeader("Content-Disposition", "inline");
+                    res.setHeader("Cache-Control", "private, no-store");
+                    return res.send(watermarkedPdf);
+                } catch (error) {
+                    console.error("Watermarked comic delivery failed:", error.message);
+                    return res.status(502).json({ success: false, message: "The comic file could not be loaded." });
+                }
             }
 
             const pdfPath = path.join(__dirname, "../uploads/pdfs", storedPdf);
@@ -439,3 +479,4 @@ exports.readComic = (req, res) => {
     );
 
 };
+
