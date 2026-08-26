@@ -245,6 +245,69 @@ exports.verifyPayment = async (req, res) => {
 */
 
 // ==========================================
+// RECOVER A CAPTURED PAYMENT IF THE BROWSER CLOSED BEFORE VERIFICATION
+// ==========================================
+exports.recoverPurchase = async (req, res) => {
+    const razorpay = getRazorpay();
+    if (!razorpay) return res.status(503).json({ success: false, message: "Payments are not configured." });
+
+    try {
+        const cartItems = await getCartItems(req.user.id);
+        if (!cartItems.length) return res.json({ success: true, recovered: false });
+
+        const subtotalPaise = Math.round(cartItems.reduce((sum, item) => sum + Number(item.price), 0) * 100);
+        const paymentList = await razorpay.payments.all({ count: 100 });
+        const payment = (paymentList.items || []).find((item) =>
+            item.status === "captured" &&
+            String(item.notes?.user_id) === String(req.user.id) &&
+            item.order_id
+        );
+
+        if (!payment) return res.json({ success: true, recovered: false });
+
+        const paymentOrder = await razorpay.orders.fetch(payment.order_id);
+        if (
+            paymentOrder.status !== "paid" ||
+            Number(paymentOrder.notes?.subtotal_paise) !== subtotalPaise ||
+            Number(paymentOrder.amount) !== Number(payment.amount)
+        ) {
+            return res.json({ success: true, recovered: false });
+        }
+
+        const connection = await db.promise().getConnection();
+        try {
+            await connection.beginTransaction();
+            let allocatedPaise = 0;
+            for (let index = 0; index < cartItems.length; index += 1) {
+                const item = cartItems[index];
+                const paidPaise = index === cartItems.length - 1
+                    ? Number(payment.amount) - allocatedPaise
+                    : Math.round(Number(item.price) * 100 * Number(payment.amount) / subtotalPaise);
+                allocatedPaise += paidPaise;
+                await connection.query(
+                    `INSERT INTO orders (user_id, comic_id, price, payment_status)
+                     SELECT ?, ?, ?, 'Paid' WHERE NOT EXISTS
+                     (SELECT 1 FROM orders WHERE user_id = ? AND comic_id = ? AND payment_status = 'Paid')`,
+                    [req.user.id, item.comic_id, paidPaise / 100, req.user.id, item.comic_id]
+                );
+            }
+            await connection.query("DELETE FROM cart WHERE user_id = ?", [req.user.id]);
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+
+        return res.json({ success: true, recovered: true });
+    } catch (error) {
+        console.error("Payment recovery failed:", error);
+        return res.status(500).json({ success: false, message: "Could not recover this payment automatically." });
+    }
+};
+
+// ==========================================
 // GET MY ORDERS
 // ==========================================
 exports.getOrders = (req, res) => {
