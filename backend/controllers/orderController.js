@@ -359,16 +359,21 @@ exports.getOrders = (req, res) => {
 // ==========================================
 // READ PURCHASED COMIC
 // ==========================================
-const streamCloudinaryPdf = (res, publicId) => {
-    const signedUrl = cloudinary.url(publicId, {
+const streamCloudinaryPdf = (res, storedPublicId) => {
+    // Raw Cloudinary assets retain their file extension in the public ID. The
+    // private download API expects the ID and format separately.
+    const extensionMatch = storedPublicId.match(/^(.*)\.([^.\/]+)$/);
+    const publicId = extensionMatch ? extensionMatch[1] : storedPublicId;
+    const format = extensionMatch ? extensionMatch[2] : "pdf";
+    const downloadUrl = cloudinary.utils.private_download_url(publicId, format, {
         resource_type: "raw",
         type: "authenticated",
-        sign_url: true,
         expires_at: Math.floor(Date.now() / 1000) + (5 * 60)
     });
 
-    https.get(signedUrl, (fileResponse) => {
+    https.get(downloadUrl, (fileResponse) => {
         if (fileResponse.statusCode !== 200) {
+            console.error("Cloud PDF download failed:", fileResponse.statusCode, fileResponse.headers["x-cld-error"] || "");
             fileResponse.resume();
             return res.status(502).json({ success: false, message: "The comic file could not be loaded." });
         }
