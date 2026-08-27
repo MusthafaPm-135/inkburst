@@ -7,6 +7,18 @@ const widgetId = import.meta.env.VITE_TAWK_WIDGET_ID || "1k11r6h26";
 
 export const isTawkConfigured = Boolean(propertyId && widgetId);
 
+export function closeTawkChat() {
+    const tawk = window.Tawk_API;
+    if (!tawk) return;
+
+    try {
+        tawk.endChat?.();
+        tawk.minimize?.();
+    } catch {
+        // The widget may still be loading. Logging out must still continue.
+    }
+}
+
 function TawkTo() {
     useEffect(() => {
         if (!isTawkConfigured || document.querySelector("script[data-keyra-tawk]")) return undefined;

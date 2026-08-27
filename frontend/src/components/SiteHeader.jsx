@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import API from "../api/axios";
 import BrandMark from "./BrandMark";
+import { closeTawkChat } from "./TawkTo";
 
 function SiteHeader() {
     const navigate = useNavigate();
@@ -19,6 +20,7 @@ function SiteHeader() {
         try { await API.post("/auth/logout"); } catch { /* local session is cleared either way */ }
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        closeTawkChat();
         closeMenu();
         navigate("/");
     };

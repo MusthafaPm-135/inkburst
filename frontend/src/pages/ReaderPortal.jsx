@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import API, { API_ORIGIN } from "../api/axios";
 import BrandMark from "../components/BrandMark";
+import { closeTawkChat } from "../components/TawkTo";
 import "./ReaderPortal.css";
 
 const getCoverUrl = (cover) => {
@@ -93,6 +94,7 @@ function ReaderPortal() {
     const logout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        closeTawkChat();
         setOrders([]);
         setSelected(null);
         setReaderUrl("");

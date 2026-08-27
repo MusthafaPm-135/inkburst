@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API, { API_ORIGIN } from "../api/axios";
 import { getComics } from "../api/comics";
+import { closeTawkChat } from "../components/TawkTo";
 import "./AdminDashboard.css";
 import "./AdminNext.css";
 
@@ -201,6 +202,7 @@ function AdminDashboard() {
         try { await API.post("/auth/logout"); } catch { /* clear local session either way */ }
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        closeTawkChat();
         navigate("/");
     };
 
