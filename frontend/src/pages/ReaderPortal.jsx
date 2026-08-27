@@ -31,6 +31,7 @@ function ReaderPortal() {
         } catch (error) {
             localStorage.removeItem("token");
             localStorage.removeItem("user");
+            closeTawkChat();
             setMessage(error.response?.data?.message || "Please sign in again to open your library.");
             setMode("login");
         } finally {
@@ -66,6 +67,7 @@ function ReaderPortal() {
                 if (!response.data.token) throw new Error("Login completed without an access token. Please try again.");
                 localStorage.setItem("token", response.data.token);
                 localStorage.setItem("user", JSON.stringify(response.data.user || {}));
+                window.dispatchEvent(new Event("authChanged"));
                 await loadLibrary();
             }
         } catch (error) {

@@ -6,6 +6,7 @@ const {
     login,
     logout,
     me,
+    tawkIdentity,
     googleLogin,
     googleCallback,
     exchangeGoogleCode
@@ -31,6 +32,7 @@ router.post("/google/exchange", exchangeGoogleCode);
 router.post("/logout", logout);
 
 router.get("/me", auth, me);
+router.get("/tawk-identity", auth, tawkIdentity);
 
 
 module.exports = router;

@@ -239,6 +239,59 @@ exports.me = (req, res) => {
 };
 
 // ===============================
+// TAWK VISITOR IDENTITY
+// ===============================
+// The signature is created here instead of in the browser so the Tawk Secure
+// Mode key is never exposed to visitors.
+exports.tawkIdentity = async (req, res) => {
+    const secureModeKey = process.env.TAWK_SECURE_MODE_KEY;
+
+    if (!secureModeKey) {
+        return res.status(503).json({
+            success: false,
+            message: "Tawk secure sign-in is not configured yet."
+        });
+    }
+
+    try {
+        const users = await query(
+            "SELECT id, username, email FROM users WHERE id = ?",
+            [req.user.id]
+        );
+
+        if (!users.length) {
+            return res.status(401).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const user = users[0];
+        const userId = String(user.id);
+        const hash = crypto
+            .createHmac("sha256", secureModeKey)
+            .update(userId)
+            .digest("hex");
+
+        return res.json({
+            success: true,
+            visitor: {
+                userId,
+                hash,
+                name: user.username,
+                email: user.email
+            }
+        });
+    } catch (error) {
+        console.error("TAWK IDENTITY ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to prepare Tawk sign-in"
+        });
+    }
+};
+
+// ===============================
 // GOOGLE SIGN-IN
 // ===============================
 exports.googleLogin = (req, res) => {
