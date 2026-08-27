@@ -60,6 +60,25 @@ function HomeDesign() {
     </div>
 </section>
 <div className="reader-promise" aria-label="KeyraComics benefits"><span><strong>BUY ONCE</strong><small>No subscription needed</small></span><span><strong>READ ANYWHERE</strong><small>Phone, tablet, or desktop</small></span><span><strong>KEEP YOUR SHELF</strong><small>Purchases stay in Library</small></span><span><strong>BACK NEW VOICES</strong><small>Independent creator stories</small></span></div>
+<section className="reader-app-promo" aria-labelledby="reader-app-title">
+    <div className="reader-app-stamp mono">NOW ON ANDROID</div>
+    <div className="reader-app-copy">
+        <p className="eyebrow mono">TAKE YOUR LIBRARY WITH YOU</p>
+        <h2 id="reader-app-title">THE KEYRA<br />READER APP</h2>
+        <p>
+            Buy your comics here, then sign in to the Keyra Reader App to keep
+            every purchased issue in one personal library.
+        </p>
+    </div>
+    <a
+        className="reader-app-button"
+        href="https://expo.dev/accounts/keyracomics-official/projects/keyracomics-reader/builds/6ee186a9-8992-4376-bcf7-12f0136ddea8"
+        target="_blank"
+        rel="noreferrer"
+    >
+        Get the Reader App <span aria-hidden="true">↗</span>
+    </a>
+</section>
 <section
     className="section"
     id="browse"
