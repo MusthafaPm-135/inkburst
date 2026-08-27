@@ -73,11 +73,10 @@ function HomeDesign() {
     <div className="reader-app-actions">
         <a
             className="reader-app-button"
-            href="https://expo.dev/accounts/keyracomics-official/projects/keyracomics-reader/builds/6ee186a9-8992-4376-bcf7-12f0136ddea8"
-            target="_blank"
-            rel="noreferrer"
+            href="https://expo.dev/artifacts/eas/Ht0pBERQQMQ_D1VrouR7KZZ7ld0rWEB9kloRAweDC4I.apk"
+            download
         >
-            Get the Reader App <span aria-hidden="true">↗</span>
+            Download Reader App <span aria-hidden="true">↓</span>
         </a>
         <a className="reader-app-web-link" href="/reader">Use on desktop →</a>
     </div>
