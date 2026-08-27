@@ -12,7 +12,10 @@ function HomeDesign() {
     const location = useLocation();
     const [comics, setComics] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
     const featuredComic = comics[0];
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const matchingComics = comics.filter((comic) => [comic.title, comic.author, comic.genre, comic.description].filter(Boolean).some((value) => value.toLowerCase().includes(normalizedQuery)));
 
     const getCoverUrl = (comic) => {
         const cover = comic?.cover_image || comic?.cover;
@@ -88,17 +91,24 @@ function HomeDesign() {
 
     <div className="section-head storefront-section-head">
         <div><p className="mono section-kicker">FIND YOUR NEXT FIX</p><h2>Browse the Stack</h2></div>
-        <p>{loading ? "Opening the vault…" : `${comics.length} digital release${comics.length === 1 ? "" : "s"} ready to discover`}</p>
+        <p>{loading ? "Opening the vault…" : normalizedQuery ? `${matchingComics.length} result${matchingComics.length === 1 ? "" : "s"} for “${searchQuery.trim()}”` : `${comics.length} digital release${comics.length === 1 ? "" : "s"} ready to discover`}</p>
+    </div>
+
+    <div className="catalogue-search">
+        <label htmlFor="comic-search"><span aria-hidden="true">⌕</span><input id="comic-search" type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search comics, creators, or genres" /></label>
+        {searchQuery && <button type="button" onClick={() => setSearchQuery("")}>Clear</button>}
     </div>
 
     {loading ? (
         <p className="mono" style={{ textAlign: "center", padding: "40px 0" }}>Loading comics...</p>
-    ) : comics && comics.length > 0 ? (
+    ) : matchingComics.length > 0 ? (
         <div className="grid">
-            {comics.map((comic) => (
+            {matchingComics.map((comic) => (
                 <ComicCard key={comic.id} comic={comic} />
             ))}
         </div>
+    ) : normalizedQuery ? (
+        <section className="catalogue-no-results"><strong>No comics found.</strong><span>Try a different title, creator, or genre.</span></section>
     ) : (
         <section className="coming-soon" aria-labelledby="coming-soon-title">
             <div className="coming-soon-burst" aria-hidden="true">POW!</div>

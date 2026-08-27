@@ -224,6 +224,15 @@
     padding-bottom: 10px;
   }
   .section-head h2{ font-size: 42px; margin:0; }
+  .catalogue-search{display:flex;align-items:center;gap:10px;max-width:640px;margin:-8px 0 28px;}
+  .catalogue-search label{display:flex;align-items:center;gap:10px;flex:1;padding:0 13px;border:2px solid var(--ink);border-radius:7px;background:var(--paper);}
+  .catalogue-search label span{font-size:22px;font-weight:900;line-height:1;}
+  .catalogue-search input{width:100%;padding:13px 0;border:0;outline:0;background:transparent;color:var(--ink);font-size:14px;font-weight:600;}
+  .catalogue-search button{padding:12px 14px;border:2px solid var(--ink);border-radius:7px;background:var(--paper);color:var(--ink);font-size:12px;font-weight:800;text-transform:uppercase;}
+  .catalogue-search button:hover{background:var(--yellow);}
+  .catalogue-no-results{display:grid;gap:8px;place-items:center;padding:56px 24px;border:3px solid var(--ink);background:var(--paper);text-align:center;}
+  .catalogue-no-results strong{font-family:'Bangers',cursive;font-size:34px;}
+  .catalogue-no-results span{font-size:14px;font-weight:600;}
   .filters{ display:flex; gap:10px; flex-wrap:wrap; }
   .chip{
     background:var(--paper); border:2.5px solid var(--ink);
@@ -471,6 +480,7 @@
     .auth-link, .signup-link{ display:none; }
     .hamburger-btn{ display:flex; }
     .section{ padding-inline:18px; }
+    .catalogue-search{margin-bottom:22px;}
     .coming-soon{ min-height:360px; padding:42px 18px 34px; }
     .coming-soon h3{ font-size:52px; }
     .coming-soon-burst{ top:14px; right:12px; width:68px; height:68px; font-size:19px; }
