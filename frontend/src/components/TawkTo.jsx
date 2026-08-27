@@ -10,7 +10,7 @@ export const isTawkConfigured = Boolean(propertyId && widgetId);
 
 let isWidgetLoaded = false;
 let needsIdentitySync = false;
-let hasClearedVisitorSession = false;
+let hasSignedInToTawk = false;
 
 const currentSession = () => {
     try {
@@ -26,9 +26,8 @@ const currentSession = () => {
 export function closeTawkChat() {
     needsIdentitySync = false;
     const tawk = window.Tawk_API;
-    if (!tawk?.logout) return;
-    if (hasClearedVisitorSession) return;
-    hasClearedVisitorSession = true;
+    if (!tawk?.logout || !hasSignedInToTawk) return;
+    hasSignedInToTawk = false;
 
     try {
         tawk.endChat?.();
@@ -47,8 +46,6 @@ export async function syncTawkIdentity() {
         return;
     }
 
-    hasClearedVisitorSession = false;
-
     const tawk = window.Tawk_API;
     if (!isWidgetLoaded || !tawk?.login) {
         needsIdentitySync = true;
@@ -62,7 +59,9 @@ export async function syncTawkIdentity() {
         const visitor = data?.visitor;
         if (!visitor?.userId || !visitor?.hash) throw new Error("Missing Tawk identity");
 
-        tawk.login(visitor, () => {});
+        tawk.login(visitor, (error) => {
+            hasSignedInToTawk = !error;
+        });
     } catch {
         // Never leave a previous customer's Tawk identity active if the
         // current account could not be verified.
@@ -91,7 +90,6 @@ function TawkTo() {
             isWidgetLoaded = true;
             previousOnLoad?.();
             if (needsIdentitySync || currentSession().token) void syncTawkIdentity();
-            else if (!hasClearedVisitorSession) closeTawkChat();
         };
         window.Tawk_LoadStart = new Date();
 
