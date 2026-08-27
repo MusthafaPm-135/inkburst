@@ -5,6 +5,7 @@ const orderRoutes = require("./routes/orders");
 const cartRoutes = require("./routes/cart");
 const supportRoutes = require("./routes/support");
 const couponRoutes = require("./routes/coupons");
+const whatsappWebhookRoutes = require("./routes/whatsappWebhook");
 const db = require("./config/db");
 const express = require("express");
 const cors = require("cors");
@@ -50,6 +51,19 @@ app.use(cors({
 }));
 
 app.use(securityHeaders);
+
+// WhatsApp signs the exact incoming bytes, so preserve them before parsing JSON.
+app.use(
+  "/webhooks/whatsapp",
+  express.json({
+    limit: "100kb",
+    verify: (req, res, buffer) => {
+      req.rawBody = buffer;
+    },
+  }),
+  whatsappWebhookRoutes
+);
+
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 
