@@ -9,8 +9,7 @@ const primaryQuestions = [
     { label: "Read a purchase", message: "How do I read a purchased comic?" },
     { label: "Payment options", message: "What payment methods can I use?" },
     { label: "Missing comic", message: "Why is my purchase missing from Library?" },
-    { label: "Login trouble", message: "How can I get help with login?" },
-    { label: "Refund help", message: "How do I request a refund?" }
+    { label: "Login trouble", message: "How can I get help with login?" }
 ];
 const whatsappUrl = "https://wa.me/+918075714019";
 

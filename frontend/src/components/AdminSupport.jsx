@@ -7,8 +7,7 @@ const quickAnswers = [
     { label: "Read purchased comic", text: "After your payment is verified, open Library from the top navigation. Your purchased comic will appear there with a Read Comic button." },
     { label: "Payment methods", text: "KeyraComics checkout uses Razorpay. You can use the eligible UPI, card, net banking, or wallet options shown in the secure Razorpay payment window." },
     { label: "Missing purchase", text: "Please confirm that you are logged in with the same account used during checkout. If the comic is still missing from your Library, send us your Razorpay payment ID so we can check it." },
-    { label: "Login help", text: "You can sign in using your email and password or Continue with Google. If Google sign-in fails, return to the login page and try again in the same browser." },
-    { label: "Refund request", text: "Please send your Razorpay payment ID and the email address used for your KeyraComics account. We will review the payment and update you through this chat." }
+    { label: "Login help", text: "You can sign in using your email and password or Continue with Google. If Google sign-in fails, return to the login page and try again in the same browser." }
 ];
 
 function AdminSupport() {

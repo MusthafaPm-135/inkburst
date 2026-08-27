@@ -12,6 +12,7 @@ import AdminRoute from "./components/AdminRoute";
 import RequireAuth from "./components/RequireAuth";
 import GoogleCallback from "./pages/GoogleCallback";
 import CustomerCare from "./components/CustomerCare";
+import TawkTo, { isTawkConfigured } from "./components/TawkTo";
 import "./styles/KeyraNext.css";
 
 function App() {
@@ -43,7 +44,7 @@ function App() {
                 </Route>
 
             </Routes>
-            <CustomerCare />
+            {isTawkConfigured ? <TawkTo /> : <CustomerCare />}
         </BrowserRouter>
     );
 }
