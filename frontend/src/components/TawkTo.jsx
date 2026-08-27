@@ -10,6 +10,7 @@ export const isTawkConfigured = Boolean(propertyId && widgetId);
 
 let isWidgetLoaded = false;
 let needsIdentitySync = false;
+let hasClearedVisitorSession = false;
 
 const currentSession = () => {
     try {
@@ -25,7 +26,9 @@ const currentSession = () => {
 export function closeTawkChat() {
     needsIdentitySync = false;
     const tawk = window.Tawk_API;
-    if (!tawk) return;
+    if (!tawk?.logout) return;
+    if (hasClearedVisitorSession) return;
+    hasClearedVisitorSession = true;
 
     try {
         tawk.endChat?.();
@@ -43,6 +46,8 @@ export async function syncTawkIdentity() {
         closeTawkChat();
         return;
     }
+
+    hasClearedVisitorSession = false;
 
     const tawk = window.Tawk_API;
     if (!isWidgetLoaded || !tawk?.login) {
@@ -86,7 +91,7 @@ function TawkTo() {
             isWidgetLoaded = true;
             previousOnLoad?.();
             if (needsIdentitySync || currentSession().token) void syncTawkIdentity();
-            else closeTawkChat();
+            else if (!hasClearedVisitorSession) closeTawkChat();
         };
         window.Tawk_LoadStart = new Date();
 
