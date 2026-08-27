@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 
-const propertyId = import.meta.env.VITE_TAWK_PROPERTY_ID;
-const widgetId = import.meta.env.VITE_TAWK_WIDGET_ID;
+// Tawk widget IDs are public identifiers from the embed code. Environment
+// variables can still override these values if the business changes widgets.
+const propertyId = import.meta.env.VITE_TAWK_PROPERTY_ID || "6a904ea8cedbe83442f9a9a7";
+const widgetId = import.meta.env.VITE_TAWK_WIDGET_ID || "1k11r6h26";
 
 export const isTawkConfigured = Boolean(propertyId && widgetId);
 
