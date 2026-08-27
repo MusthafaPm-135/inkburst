@@ -26,6 +26,7 @@ const currentSession = () => {
 export function closeTawkChat() {
     needsIdentitySync = false;
     const tawk = window.Tawk_API;
+    tawk?.hideWidget?.();
     if (!tawk?.logout || !hasSignedInToTawk) return;
     hasSignedInToTawk = false;
 
@@ -61,6 +62,7 @@ export async function syncTawkIdentity() {
 
         tawk.login(visitor, (error) => {
             hasSignedInToTawk = !error;
+            if (!error) tawk.showWidget?.();
         });
     } catch {
         // Never leave a previous customer's Tawk identity active if the
@@ -85,11 +87,20 @@ function TawkTo() {
         }
 
         window.Tawk_API = window.Tawk_API || {};
+        // Support is account-only. Hiding it before render prevents a signed-out
+        // browser from seeing a previous visitor's chat list.
+        window.Tawk_API.autoStart = false;
+        const previousOnBeforeLoad = window.Tawk_API.onBeforeLoad;
+        window.Tawk_API.onBeforeLoad = () => {
+            previousOnBeforeLoad?.();
+            window.Tawk_API.hideWidget?.();
+        };
         const previousOnLoad = window.Tawk_API.onLoad;
         window.Tawk_API.onLoad = () => {
             isWidgetLoaded = true;
             previousOnLoad?.();
             if (needsIdentitySync || currentSession().token) void syncTawkIdentity();
+            else window.Tawk_API.hideWidget?.();
         };
         window.Tawk_LoadStart = new Date();
 
