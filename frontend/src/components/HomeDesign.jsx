@@ -13,6 +13,8 @@ function HomeDesign() {
     const [comics, setComics] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [downloadingApp, setDownloadingApp] = useState(false);
+    const readerAppUrl = "https://expo.dev/artifacts/eas/Ht0pBERQQMQ_D1VrouR7KZZ7ld0rWEB9kloRAweDC4I.apk";
     const featuredComic = comics[0];
     const normalizedQuery = searchQuery.trim().toLowerCase();
     const matchingComics = comics.filter((comic) => [comic.title, comic.author, comic.genre, comic.description].filter(Boolean).some((value) => value.toLowerCase().includes(normalizedQuery)));
@@ -22,6 +24,31 @@ function HomeDesign() {
         if (!cover) return "";
         if (/^(https?:|data:)/.test(cover)) return cover;
         return cover.startsWith("/") ? `${API_ORIGIN}${cover}` : `${API_ORIGIN}/uploads/covers/${cover}`;
+    };
+
+    const downloadReaderApp = async (event) => {
+        event.preventDefault();
+        if (downloadingApp) return;
+
+        setDownloadingApp(true);
+        try {
+            const response = await fetch(readerAppUrl);
+            if (!response.ok) throw new Error("Download unavailable");
+
+            const appFile = await response.blob();
+            const fileUrl = URL.createObjectURL(appFile);
+            const link = document.createElement("a");
+            link.href = fileUrl;
+            link.download = "KeyraReader.apk";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(fileUrl);
+        } catch {
+            window.location.assign(readerAppUrl);
+        } finally {
+            setDownloadingApp(false);
+        }
     };
 
     useEffect(() => {
@@ -76,10 +103,10 @@ function HomeDesign() {
     <div className="reader-app-actions">
         <a
             className="reader-app-button"
-            href="https://expo.dev/artifacts/eas/Ht0pBERQQMQ_D1VrouR7KZZ7ld0rWEB9kloRAweDC4I.apk"
-            download
+            href={readerAppUrl}
+            onClick={downloadReaderApp}
         >
-            Download Reader App <span aria-hidden="true">↓</span>
+            {downloadingApp ? "Preparing download…" : "Download Reader App"} <span aria-hidden="true">↓</span>
         </a>
         <a className="reader-app-web-link" href="/reader">Use on desktop →</a>
     </div>
