@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import API, { API_ORIGIN } from "../api/axios";
 import { getComics } from "../api/comics";
 import "./AdminDashboard.css";
-import AdminSupport from "../components/AdminSupport";
 import "./AdminNext.css";
 
 const emptyComic = { title: "", author: "", genre: "", price: "", description: "" };
@@ -261,8 +260,6 @@ function AdminDashboard() {
         <section className="admin-panel"><div className="panel-heading"><div><h2>Manual invoice PDFs</h2><p>Download a paid order invoice, then send it yourself.</p></div></div>
             {!orders.length ? <p>{loading ? "Loading paid orders…" : "No paid orders yet."}</p> : <div className="admin-users-table-wrap"><table className="admin-users-table"><thead><tr><th>Order</th><th>Customer</th><th>Comic</th><th>Paid</th><th></th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td className="user-id">#{order.id}<br /><span className="user-date">{new Date(order.purchased_at).toLocaleDateString()}</span></td><td><strong>{order.username}</strong><br /><span className="user-email">{order.email}</span></td><td>{order.title}</td><td>₹{Number(order.price).toFixed(2)}</td><td><button type="button" className="primary-button" onClick={() => downloadInvoice(order)}>Download PDF</button></td></tr>)}</tbody></table></div>}
         </section>
-
-        <AdminSupport />
 
         <section className="admin-panel"><div className="panel-heading"><div><h2>Comic access history</h2><p>Latest 200 reader events. Every delivered PDF includes the buyer and order number.</p></div></div>
             {!accessLogs.length ? <p>{loading ? "Loading access history…" : "No delivered comics have been read yet."}</p> : <div className="admin-users-table-wrap"><table className="admin-users-table"><thead><tr><th>When</th><th>Customer</th><th>Comic</th><th>IP</th><th>Watermark</th></tr></thead><tbody>{accessLogs.map((log) => <tr key={log.id}><td className="user-date">{new Date(log.accessed_at).toLocaleString()}</td><td><strong>{log.username}</strong><br /><span className="user-email">{log.email}</span></td><td>{log.title}</td><td className="user-id">{log.ip_address || "—"}</td><td className="user-id">{log.watermark_label}</td></tr>)}</tbody></table></div>}
