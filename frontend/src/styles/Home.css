@@ -208,6 +208,9 @@
     box-shadow:var(--shadow-sm); text-decoration:none; font-size:14px; font-weight:900;
     text-transform:uppercase; letter-spacing:.04em;
   }
+  .reader-app-actions{display:grid;gap:12px;justify-items:start;}
+  .reader-app-web-link{color:var(--paper);font-size:13px;font-weight:800;text-underline-offset:4px;}
+  .reader-app-web-link:hover{color:var(--yellow);}
   .reader-app-button span{ font-size:20px; line-height:0; }
   .reader-app-button:hover{ transform:translate(-2px, -2px); background:var(--yellow); box-shadow:5px 5px 0 var(--ink); }
 
@@ -444,7 +447,7 @@
     .reader-app-stamp{ top:14px; right:16px; }
     .reader-app-copy h2{ font-size:52px; }
     .reader-app-copy p:not(.eyebrow){ max-width:calc(100% - 70px); }
-    .reader-app-button{ justify-self:start; }
+    .reader-app-actions{ justify-self:start; }
     .burst{ width:110px; height:110px; top:16px; right:16px; }
     .burst span{ font-size:16px; }
     .nav-links{

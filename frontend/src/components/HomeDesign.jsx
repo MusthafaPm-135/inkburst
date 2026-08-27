@@ -70,14 +70,17 @@ function HomeDesign() {
             every purchased issue in one personal library.
         </p>
     </div>
-    <a
-        className="reader-app-button"
-        href="https://expo.dev/accounts/keyracomics-official/projects/keyracomics-reader/builds/6ee186a9-8992-4376-bcf7-12f0136ddea8"
-        target="_blank"
-        rel="noreferrer"
-    >
-        Get the Reader App <span aria-hidden="true">↗</span>
-    </a>
+    <div className="reader-app-actions">
+        <a
+            className="reader-app-button"
+            href="https://expo.dev/accounts/keyracomics-official/projects/keyracomics-reader/builds/6ee186a9-8992-4376-bcf7-12f0136ddea8"
+            target="_blank"
+            rel="noreferrer"
+        >
+            Get the Reader App <span aria-hidden="true">↗</span>
+        </a>
+        <a className="reader-app-web-link" href="/reader">Use on desktop →</a>
+    </div>
 </section>
 <section
     className="section"

@@ -13,6 +13,7 @@ import RequireAuth from "./components/RequireAuth";
 import GoogleCallback from "./pages/GoogleCallback";
 import CustomerCare from "./components/CustomerCare";
 import TawkTo, { isTawkConfigured } from "./components/TawkTo";
+import ReaderPortal from "./pages/ReaderPortal";
 import "./styles/KeyraNext.css";
 
 function App() {
@@ -30,6 +31,8 @@ function App() {
                 />
 
                 <Route path="/register" element={<Register />} />
+
+                <Route path="/reader" element={<ReaderPortal />} />
 
                 <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
 
