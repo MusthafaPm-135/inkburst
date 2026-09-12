@@ -156,6 +156,9 @@ exports.login = (req, res) => {
                 });
             }
 
+            if (req.adminLogin && user.role !== 'admin') {
+                return res.status(403).json({success:false, message:'This workspace is only available to administrators.'});
+            }
             const token = jwt.sign(
                 {
                     id: user.id,

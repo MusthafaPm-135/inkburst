@@ -1,0 +1,8 @@
+{
+  "appId": "com.keyracomics.admin",
+  "appName": "Keyra Admin",
+  "webDir": "dist-admin",
+  "server": { "androidScheme": "https" },
+  "android": { "allowMixedContent": false, "webContentsDebuggingEnabled": false },
+  "plugins": { "SplashScreen": { "launchAutoHide": true } }
+}

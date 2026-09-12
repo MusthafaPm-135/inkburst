@@ -22,6 +22,7 @@ router.post("/register", authRateLimit, register);
 
 // Login Route
 router.post("/login", authRateLimit, login);
+router.post('/admin-login', authRateLimit, (req, res, next) => { req.adminLogin = true; next(); }, login);
 
 router.get("/google", authRateLimit, googleLogin);
 router.get("/google/callback", googleCallback);

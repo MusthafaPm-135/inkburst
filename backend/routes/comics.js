@@ -12,6 +12,8 @@ router.get("/", getComics);
 
 router.post(
     "/upload",
+    require("../middleware/auth"),
+    require("../middleware/admin"),
     upload.fields([
         { name: "cover", maxCount: 1 },
         { name: "pdf", maxCount: 1 }

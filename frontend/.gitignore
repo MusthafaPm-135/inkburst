@@ -34,3 +34,6 @@ uploads/
 Thumbs.db
 .vscode/
 .idea/
+dist-admin/
+*.keystore
+*.jks
