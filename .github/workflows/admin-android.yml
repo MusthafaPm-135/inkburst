@@ -24,7 +24,7 @@ jobs:
       - uses: android-actions/setup-android@v3
       - run: npm ci --no-audit --no-fund
         working-directory: frontend
-      - run: npm run build
+      - run: npm run build:admin
         working-directory: frontend
       - run: node scripts/prepare-android.mjs
         working-directory: frontend

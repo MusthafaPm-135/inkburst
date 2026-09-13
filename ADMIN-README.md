@@ -1,6 +1,6 @@
 # KeyraComics administration
 
-The dedicated web entry is `https://keyracomics.vercel.app/control/` after Vercel deploys this revision. The existing public storefront stays at `/`. The Android application bundles the same admin experience and uses `https://inkburst-backend.onrender.com/api`.
+The dedicated web entry is `https://keyraadmin.vercel.app/` after Vercel deploys this revision. The existing public storefront stays at `/`. The Android application bundles the same admin experience and uses `https://inkburst-backend.onrender.com/api`.
 
 ## Access
 
@@ -25,7 +25,7 @@ Render free services sleep after inactivity and can take time to wake. Existing 
 
 The `Keyra Admin Android` GitHub Actions workflow builds an installable internal-testing APK and retains it for 30 days. Download the `keyra-admin-android` artifact from a successful run. This is a debug-signed testing build, not a Play Store release. For stable updates or store publication, configure a private release keystore and preserve it securely; never commit signing keys.
 
-Local build: in `frontend`, run `npm ci`, `npm run build`, `node scripts/prepare-android.mjs`, `npx cap sync android`, then `android/gradlew assembleDebug`. Requires JDK 21 and the Android SDK. Install only on authorized administrators' devices.
+Local build: in `frontend`, run `npm ci`, `npm run build:admin`, `npx cap sync android`, then `android/gradlew assembleDebug`. Requires JDK 21 and the Android SDK. Install only on authorized administrators' devices.
 
 ## Validation
 

@@ -93,10 +93,7 @@ function Navbar() {
                     <>
                         <button onClick={() => navigate("/library")}>
                             Library
-                        </button>
-
-                        {user.role === "admin" && (
-                            <button onClick={() => navigate("/admin")}>
+                        </button>>
                                 Admin
                             </button>
                         )}

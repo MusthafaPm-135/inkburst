@@ -176,7 +176,7 @@ function AdminDashboard({ onLogout, adminUser } = {}) {
     const navigateTab = name => { setTab(name); setSelectedUser(null); setShowEditor(false); window.scrollTo({top:0}); };
     return <main className="admin-page">
         <header className="admin-header">
-            <div><a href="/control/" className="admin-logo">KEYRA<span>COMICS</span></a><p>Admin control room</p></div>
+            <div><a href="/" className="admin-logo">KEYRA<span>COMICS</span></a><p>Admin control room</p></div>
             <div className="admin-header-actions">
                 <span className="sync-status" role="status">{sync}</span><button className="secondary-button" onClick={() => { loadDashboard(); loadCoupons(); }}>Refresh</button>
                 <button className="secondary-button" onClick={logout}>Log out</button>
