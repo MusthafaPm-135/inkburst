@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API, { API_ORIGIN } from "../api/axios";
 import AdminIcon from '../control/admin-icon';
+import ManageUser from '../control/manage-user';
 import AdminSupport from "../components/AdminSupport";
 import {saveInvoice} from "../control/save-invoice";
 const getComics = async () => (await API.get("/admin/comics")).data.comics;
@@ -243,14 +244,12 @@ function AdminDashboard({ onLogout, adminUser } = {}) {
             {!orders.length ? <p>{loading ? "Loading paid orders…" : "No paid orders yet."}</p> : <div className="admin-users-table-wrap"><table className="admin-users-table"><thead><tr><th>Order</th><th>Customer</th><th>Comic</th><th>Paid</th><th></th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td className="user-id">#{order.id}<br /><span className="user-date">{new Date(order.purchased_at).toLocaleDateString()}</span></td><td><strong>{order.username}</strong><br /><span className="user-email">{order.email}</span></td><td>{order.title}</td><td>₹{Number(order.price).toFixed(2)}</td><td><button type="button" className="primary-button" onClick={() => downloadInvoice(order)}>Download PDF</button></td></tr>)}</tbody></table></div>}
         </section>
 
-        <section hidden={tab !== "Readers"} className="admin-panel"><div className="panel-heading"><div><h2>Comic access history</h2><p>Latest 200 reader events. Every delivered PDF includes the buyer and order number.</p></div></div>
-            {!accessLogs.length ? <p>{loading ? "Loading access history…" : "No delivered comics have been read yet."}</p> : <div className="admin-users-table-wrap"><table className="admin-users-table"><thead><tr><th>When</th><th>Customer</th><th>Comic</th><th>IP</th><th>Watermark</th></tr></thead><tbody>{accessLogs.map((log) => <tr key={log.id}><td className="user-date">{new Date(log.accessed_at).toLocaleString()}</td><td><strong>{log.username}</strong><br /><span className="user-email">{log.email}</span></td><td>{log.title}</td><td className="user-id">{log.ip_address || "—"}</td><td className="user-id">{log.watermark_label}</td></tr>)}</tbody></table></div>}
-        </section>
+
 
         <section hidden={tab !== "Readers"} className="admin-panel">
             <div className="panel-heading">
                 <div>
-                    <h2>Registered Users</h2>
+                    <h2>Manage users</h2>
                     <p>{usersList.length} user account{usersList.length === 1 ? "" : "s"}</p>
                 </div>
             </div>
@@ -266,6 +265,7 @@ function AdminDashboard({ onLogout, adminUser } = {}) {
                                 <th>Email</th>
                                 <th>Role</th>
                                 <th>Joined</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -282,6 +282,7 @@ function AdminDashboard({ onLogout, adminUser } = {}) {
                                     <td className="user-date">
                                         {user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
                                     </td>
+                                    <td><button className="secondary-button" onClick={()=>setSelectedUser(user)}>Manage user</button></td>
                                 </tr>
                             ))}
                         </tbody>
@@ -289,7 +290,10 @@ function AdminDashboard({ onLogout, adminUser } = {}) {
                 </div>
             )}
         </section>
-        {selectedUser && <div className="profile-overlay"><section role="dialog" aria-modal="true" aria-labelledby="profile-title" className="profile-card"><button className="text-button" autoFocus onClick={()=>setSelectedUser(null)}>← Back to users</button><header><div className="user-avatar">{selectedUser.username?.slice(0,1).toUpperCase()}</div><div><h2 id="profile-title">{selectedUser.username}</h2><span className="user-badge">{selectedUser.role}</span><p>{selectedUser.email}</p><small>Joined {selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : 'date unavailable'}</small></div></header><div className="profile-detail"><strong>Account details</strong><p>User #{selectedUser.id}</p><p>{selectedUser.email}</p></div><div className="profile-detail"><strong>Permissions</strong><p>{selectedUser.role === 'admin' ? 'Administrator access' : 'Customer access'}</p><small>Permissions are verified by the server on every request.</small></div><div className="profile-detail"><strong>Recent reading history</strong>{accessLogs.filter(l=>l.email===selectedUser.email).slice(0,5).map(l=><p key={l.id}>{l.title} · {new Date(l.accessed_at).toLocaleDateString()}</p>)}{!accessLogs.some(l=>l.email===selectedUser.email) && <p>No entries in the latest 200 reader events.</p>}</div></section></div>}
+        <section hidden={tab !== "Readers"} className="admin-panel"><div className="panel-heading"><div><h2>Comic access history</h2><p>Latest 200 reader events. Every delivered PDF includes the buyer and order number.</p></div></div>
+            {!accessLogs.length ? <p>{loading ? "Loading access history…" : "No delivered comics have been read yet."}</p> : <div className="admin-users-table-wrap"><table className="admin-users-table"><thead><tr><th>When</th><th>Customer</th><th>Comic</th><th>IP</th><th>Watermark</th></tr></thead><tbody>{accessLogs.map((log) => <tr key={log.id}><td className="user-date">{new Date(log.accessed_at).toLocaleString()}</td><td><strong>{log.username}</strong><br /><span className="user-email">{log.email}</span></td><td>{log.title}</td><td className="user-id">{log.ip_address || "—"}</td><td className="user-id">{log.watermark_label}</td></tr>)}</tbody></table></div>}
+        </section>
+        {selectedUser && <ManageUser key={selectedUser.id} user={selectedUser} adminUser={adminUser} onClose={()=>setSelectedUser(null)} onChanged={loadDashboard} />}
         {tab === "Support" && <AdminSupport />}
     </main>;
 }

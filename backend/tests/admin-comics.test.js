@@ -27,6 +27,7 @@ test('admin comics callback queries send one response and survive database failu
             if (name === '../config/db') return db;
             if (name === '../config/cloudinary') return {};
             if (name === 'pdf-lib') return {};
+            if (name === './adminUsers') return express.Router();
             if (name === '../middleware/auth' || name === '../middleware/admin') return (req, res, next) => next();
             if (name === 'fs') return { existsSync: () => true };
             return routeRequire(name);

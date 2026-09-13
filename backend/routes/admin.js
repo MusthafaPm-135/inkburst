@@ -133,6 +133,7 @@ router.get("/test", auth, admin, (req, res) => {
 // =============================
 router.use(auth);
 router.use(admin);
+router.use('/users', require('./adminUsers'));
 router.get('/session', (req, res) => res.json({success:true, user:{id:req.user.id, username:req.user.username, email:req.user.email, role:req.user.role}}));
 router.get('/comics', (req, res) => {
     // mysql2 callback queries must not be returned as promises to Express.

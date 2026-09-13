@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const db = require('../config/db');
 
 module.exports = (req, res, next) => {
 
@@ -19,9 +20,12 @@ module.exports = (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        req.user = decoded;
-
-        next();
+        db.query('SELECT id, username, email, role FROM users WHERE id = ? LIMIT 1', [decoded.id], (error, users) => {
+            if (error) return res.status(503).json({success:false,message:'Could not verify your account. Please retry.'});
+            if (!users.length) return res.status(401).json({success:false,message:'This account is no longer available.'});
+            req.user = {...decoded, ...users[0]};
+            next();
+        });
 
     } catch (err) {
         console.error("JWT VERIFY ERROR:", err);
