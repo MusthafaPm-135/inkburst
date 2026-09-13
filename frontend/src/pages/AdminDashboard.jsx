@@ -30,6 +30,8 @@ function AdminDashboard({ onLogout, adminUser } = {}) {
     const [files, setFiles] = useState({ cover_image: null, pdf_file: null });
     const [editingId, setEditingId] = useState(null);
     const [message, setMessage] = useState("");
+    const [loadErrors, setLoadErrors] = useState([]);
+    const [couponError, setCouponError] = useState("");
     const [loading, setLoading] = useState(true);
 
     const getCoverUrl = (cover) => {
@@ -43,7 +45,7 @@ function AdminDashboard({ onLogout, adminUser } = {}) {
         if (pending.current) return;
         pending.current = true;
         try {
-            const [statsResponse, comicList, usersResponse, accessResponse, ordersResponse] = await Promise.all([
+            const results = await Promise.allSettled([
                 API.get("/admin/stats"),
                 getComics(),
                 API.get("/admin/users"),
@@ -51,23 +53,26 @@ function AdminDashboard({ onLogout, adminUser } = {}) {
                 API.get("/admin/orders")
             ]);
 
-            const fetchedComics = comicList || [];
-            const fetchedUsers = usersResponse.data?.users || [];
-            const baseStats = statsResponse.data?.stats || {};
-
-            setSync(`Updated ${new Date().toLocaleTimeString()}`);
-            setComics(fetchedComics);
-            setUsersList(fetchedUsers);
-            setAccessLogs(accessResponse.data?.logs || []);
-            setOrders(ordersResponse.data?.orders || []);
-            setStats({
-                // The backend returns camelCase fields. Map them to the
-                // state names this component uses for the stat cards.
-                total_comics: Math.max(Number(baseStats.totalComics ?? baseStats.total_comics ?? 0), fetchedComics.length),
-                total_users: Math.max(Number(baseStats.totalUsers ?? baseStats.total_users ?? 0), fetchedUsers.length),
-                total_orders: Number(baseStats.totalOrders ?? baseStats.total_orders ?? 0),
-                total_revenue: Number(baseStats.totalRevenue ?? baseStats.total_revenue ?? 0),
+            const names = ['Statistics', 'Comics', 'Users', 'Reading history', 'Orders'];
+            const errors = [];
+            results.forEach((result, index) => {
+                if (result.status === 'rejected') {
+                    const status = result.reason.response?.status;
+                    errors.push(`${names[index]} could not load${status ? ` (${status})` : ' — connection interrupted'}. Retrying automatically.`);
+                    return;
+                }
+                const value = result.value;
+                if (index === 0) {
+                    const data = value.data.stats;
+                    setStats({total_comics: data.totalComics, total_users: data.totalUsers, total_orders: data.totalOrders, total_revenue: data.totalRevenue});
+                }
+                if (index === 1) setComics(value || []);
+                if (index === 2) setUsersList(value.data.users || []);
+                if (index === 3) setAccessLogs(value.data.logs || []);
+                if (index === 4) setOrders(value.data.orders || []);
             });
+            setLoadErrors(errors);
+            setSync(errors.length ? 'Some sections are unavailable — retrying automatically' : `Updated ${new Date().toLocaleTimeString()}`);
         } catch {
             setSync("Connection interrupted — retrying automatically");
         } finally {
@@ -76,7 +81,7 @@ function AdminDashboard({ onLogout, adminUser } = {}) {
         }
     };
 
-    const loadCoupons = async () => { try { const { data } = await API.get("/coupons/admin"); setCoupons(data.coupons || []); } catch { setMessage("Could not refresh coupons. Please retry."); } };
+    const loadCoupons = async () => { try { const { data } = await API.get("/coupons/admin"); setCoupons(data.coupons || []); setCouponError(''); } catch (error) { setCouponError(`Coupons could not load${error.response?.status ? ` (${error.response.status})` : ' — connection interrupted'}. Retrying automatically.`); } };
     useEffect(() => {
         const refresh = () => { if (!document.hidden) { loadDashboard(); loadCoupons(); } };
         refresh();
@@ -188,6 +193,8 @@ function AdminDashboard({ onLogout, adminUser } = {}) {
         </nav>
         <section className="admin-intro"><p>{tab === 'Overview' ? 'Welcome back,' : 'KEYRA / ADMIN'}</p><h1>{tab === 'Overview' ? <>{adminUser?.username || 'Admin'} <em>✦</em></> : tab === 'Readers' ? 'Users' : tab}</h1><p>{tab === 'Overview' ? "Here’s what’s happening at KeyraComics today." : 'Manage your community and stories.'}</p></section>
         {message && <p className="admin-message" role="status">{message}</p>}
+        {loadErrors.map(error => <p key={error} className="admin-message" role="status">{error}</p>)}
+        {couponError && <p className="admin-message" role="status">{couponError}</p>}
 
         <section hidden={tab !== "Overview"} className="stats-grid" aria-label="Store statistics">
             {[ ["Comics", stats?.total_comics ?? stats?.totalComics], ["Users", stats?.total_users ?? stats?.totalUsers], ["Orders", stats?.total_orders ?? stats?.totalOrders], ["Revenue", stats ? `₹${Number(stats.total_revenue ?? stats.totalRevenue ?? 0).toFixed(2)}` : null] ].map(([label, value]) =>

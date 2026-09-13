@@ -18,7 +18,7 @@ router.post("/validate", auth, async (req, res) => {
 
 router.get("/admin", auth, admin, async (_req, res) => {
     try { await ensureCouponsTable(); res.json({ success: true, coupons: await query("SELECT * FROM coupons ORDER BY id DESC") }); }
-    catch { res.status(500).json({ success: false, message: "Could not load coupons." }); }
+    catch (error) { console.error('Admin coupons load failed:', error.code || error.name); res.status(503).json({ success: false, message: "Could not load coupons. Please retry." }); }
 });
 
 router.post("/admin", auth, admin, async (req, res) => {

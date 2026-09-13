@@ -19,7 +19,7 @@ const ensureCouponsTable = () => {
         expires_at DATETIME NULL,
         active TINYINT(1) NOT NULL DEFAULT 1,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB`);
+    ) ENGINE=InnoDB`).catch(error => { ready = null; throw error; });
     return ready;
 };
 

@@ -48,5 +48,13 @@ test('admin comics callback queries send one response and survive database failu
             ? { success: false, message: 'Could not load comics.' }
             : { success: true, comics });
     }
+    databaseError = Object.assign(new Error('History not created yet'), { code: 'ER_NO_SUCH_TABLE' });
+    const historyUrl = url.replace('/comics', '/comic-access');
+    const emptyHistory = await fetch(historyUrl);
+    assert.equal(emptyHistory.status, 200);
+    assert.deepEqual(await emptyHistory.json(), { success: true, logs: [] });
+    databaseError = new Error('Database offline');
+    const unavailableHistory = await fetch(historyUrl);
+    assert.equal(unavailableHistory.status, 503);
     assert.equal(promiseAttempts, 0);
 });

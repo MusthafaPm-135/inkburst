@@ -225,7 +225,9 @@ router.get("/comic-access", (req, res) => {
               FROM comic_access_logs logs JOIN users ON users.id = logs.user_id
               JOIN comics ON comics.id = logs.comic_id
               ORDER BY logs.accessed_at DESC LIMIT 200`, (err, logs) => {
-        if (err) return res.status(500).json({ success: false, message: "No access history is available yet." });
+        // The history table is created on the first successful comic read.
+        if (err?.code === 'ER_NO_SUCH_TABLE') return res.json({ success: true, logs: [] });
+        if (err) return res.status(503).json({ success: false, message: "Could not load reading history. Please retry." });
         return res.json({ success: true, logs });
     });
 });
