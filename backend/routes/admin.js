@@ -134,10 +134,13 @@ router.get("/test", auth, admin, (req, res) => {
 router.use(auth);
 router.use(admin);
 router.get('/session', (req, res) => res.json({success:true, user:{id:req.user.id, username:req.user.username, email:req.user.email, role:req.user.role}}));
-router.get('/comics', (req, res) => db.query('SELECT id, title, author, genre, price, description, cover_image FROM comics ORDER BY id DESC', (err, comics) => {
-    if (err) return res.status(503).json({success:false, message:'Could not load comics.'});
-    res.json({success:true, comics});
-}));
+router.get('/comics', (req, res) => {
+    // mysql2 callback queries must not be returned as promises to Express.
+    db.query('SELECT id, title, author, genre, price, description, cover_image FROM comics ORDER BY id DESC', (err, comics) => {
+        if (err) return res.status(503).json({success:false, message:'Could not load comics.'});
+        res.json({success:true, comics});
+    });
+});
 
 // =============================
 // Dashboard Stats
@@ -463,4 +466,3 @@ router.use((err, req, res, next) => {
 });
 
 module.exports = router;
-
