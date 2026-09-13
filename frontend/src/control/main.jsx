@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import API from '../api/axios';
 import AdminDashboard from '../pages/AdminDashboard';
 import './control.css';
+import './reference.css';
 
 window.__KEYRA_ADMIN__ = true;
 
 function Control() {
+  const loginRef = useRef(null);
+  const [welcome, setWelcome] = useState(true);
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -40,19 +43,19 @@ function Control() {
     } finally { setBusy(false); }
   };
   if (checking) return <main className="gate"><p role="status">Verifying administrator access…</p></main>;
-  if (user) return <AdminDashboard onLogout={() => { clear(); setPassword(''); }} />;
-  return <main className="gate">
+  if (user) return <AdminDashboard adminUser={user} onLogout={() => { clear(); setPassword(''); }} />;
+  return <main className={`gate ${welcome ? "welcome-mode" : "signin-mode"}`}>
     <section className="gate-story" aria-label="KeyraComics admin workspace">
-      <a className="wordmark" href="/control/"><span className="brand-icon">K</span> KEYRA<span>COMICS</span></a>
-      <div><p className="control-eyebrow">BEHIND EVERY GREAT STORY</p><h1>Your world.<br/>In good hands.</h1><p className="gate-copy">The private workspace for the people<br/>who bring KeyraComics to life.</p></div>
-      <div className="story-panels" aria-hidden="true"><span>CREATE.</span><span>PUBLISH.</span><span>CONNECT.</span></div>
-      <footer>KEYRACOMICS / ADMINISTRATION</footer>
+      <div className="wordmark">KEYRA<small>ADMIN APP</small></div>
+      <div className="welcome-copy"><h1>Behind<br/>every story<br/>is a <em>team.</em></h1><p className="gate-copy">Manage. Update. Grow.<br/>Keep KeyraComics moving forward.</p><button className="welcome-start" onClick={() => { setWelcome(false); setTimeout(() => loginRef.current?.focus(), 0); }}>Get started <span>→</span></button><button className="welcome-signin" onClick={() => { setWelcome(false); setTimeout(() => loginRef.current?.focus(), 0); }}>Sign in instead</button></div>
+      
+      <footer>K E Y R A C O M I C S</footer>
     </section>
     <section className="gate-form">
-      <div className="lock-mark" aria-hidden="true">↗</div><p className="control-eyebrow">ADMIN ACCESS ONLY</p><h2>Welcome to control.</h2><p>Sign in with your KeyraComics administrator account.</p>
+      <button className="back-welcome" onClick={() => setWelcome(true)}>← Back</button><p className="control-eyebrow">ADMIN ACCESS ONLY</p><h2>Welcome to control.</h2><p>Sign in with your KeyraComics administrator account.</p>
       {error && <p role="alert" className="login-error">{error}</p>}
       <form onSubmit={login}>
-        <label>Email address<input type="email" autoComplete="username" value={email} onChange={event=>setEmail(event.target.value)} required placeholder="you@example.com" /></label>
+        <label>Email address<input ref={loginRef} type="email" autoComplete="username" value={email} onChange={event=>setEmail(event.target.value)} required placeholder="you@example.com" /></label>
         <label>Password<input type="password" autoComplete="current-password" value={password} onChange={event=>setPassword(event.target.value)} required placeholder="Your password" /></label>
         <button disabled={busy} type="submit">{busy ? 'Verifying access…' : 'Enter workspace →'}</button>
       </form>

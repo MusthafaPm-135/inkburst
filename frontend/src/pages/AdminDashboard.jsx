@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API, { API_ORIGIN } from "../api/axios";
+import AdminIcon from '../control/admin-icon';
 import AdminSupport from "../components/AdminSupport";
 import {saveInvoice} from "../control/save-invoice";
 const getComics = async () => (await API.get("/admin/comics")).data.comics;
@@ -10,11 +11,13 @@ import "./AdminNext.css";
 
 const emptyComic = { title: "", author: "", genre: "", price: "", description: "" };
 
-function AdminDashboard({ onLogout } = {}) {
+function AdminDashboard({ onLogout, adminUser } = {}) {
     const navigate = useNavigate();
     const pending = useRef(false);
     const [sync, setSync] = useState("Connecting…");
     const [saving, setSaving] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [showEditor, setShowEditor] = useState(false);
     const [tab, setTab] = useState("Overview");
     const [stats, setStats] = useState(null);
     const [comics, setComics] = useState([]);
@@ -137,6 +140,7 @@ function AdminDashboard({ onLogout } = {}) {
 
     const editComic = (comic) => {
         setTab("Comics");
+        setShowEditor(true);
         setEditingId(comic.id);
         setForm({ title: comic.title, author: comic.author, genre: comic.genre, price: comic.price, description: comic.description || "" });
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -164,6 +168,12 @@ function AdminDashboard({ onLogout } = {}) {
         navigate("/");
     };
 
+    const activity = [
+        ...usersList.filter(u=>u.created_at).map(u=>({id:'user'+u.id, title:'New user signed up', detail:u.username, date:u.created_at, section:'Readers'})),
+        ...orders.map(o=>({id:'order'+o.id,title:'Comic purchased',detail:o.title,date:o.purchased_at,section:'Orders'})),
+        ...accessLogs.map(l=>({id:'read'+l.id,title:'Comic read',detail:l.title,date:l.accessed_at,section:'Readers'}))
+    ].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
+    const navigateTab = name => { setTab(name); setSelectedUser(null); setShowEditor(false); window.scrollTo({top:0}); };
     return <main className="admin-page">
         <header className="admin-header">
             <div><a href="/control/" className="admin-logo">KEYRA<span>COMICS</span></a><p>Admin control room</p></div>
@@ -173,18 +183,23 @@ function AdminDashboard({ onLogout } = {}) {
             </div>
         </header>
 
-        <nav className="control-tabs" aria-label="Admin sections">{['Overview','Comics','Coupons','Orders','Readers','Support'].map(name => <button key={name} aria-current={tab === name ? 'page' : undefined} onClick={() => setTab(name)}>{name}</button>)}</nav><section className="admin-intro"><p className="control-eyebrow">YOUR PUBLISHING WORKSPACE</p><h1>{tab === 'Overview' ? 'The story so far.' : tab}</h1><p>Private admin access · Refreshes every 10 seconds while open</p></section>
+        <nav className="control-tabs" aria-label="Admin navigation">
+          {[['Overview','⌂','Home'],['Comics','▥','Comics'],['Add','＋','Add comic'],['Readers','♙','Users'],['More','•••','More']].map(([name,icon,label])=><button key={name} className={name === 'Add' ? 'nav-add' : ''} aria-label={label} aria-current={tab===name?'page':undefined} onClick={()=>{if(name==='Add'){navigateTab('Comics');resetForm();setShowEditor(true);}else navigateTab(name);}}><AdminIcon name={name}/><small>{label}</small></button>)}
+        </nav>
+        <section className="admin-intro"><p>{tab === 'Overview' ? 'Welcome back,' : 'KEYRA / ADMIN'}</p><h1>{tab === 'Overview' ? <>{adminUser?.username || 'Admin'} <em>✦</em></> : tab === 'Readers' ? 'Users' : tab}</h1><p>{tab === 'Overview' ? "Here’s what’s happening at KeyraComics today." : 'Manage your community and stories.'}</p></section>
         {message && <p className="admin-message" role="status">{message}</p>}
 
-        <section className="stats-grid" aria-label="Store statistics">
+        <section hidden={tab !== "Overview"} className="stats-grid" aria-label="Store statistics">
             {[ ["Comics", stats?.total_comics ?? stats?.totalComics], ["Users", stats?.total_users ?? stats?.totalUsers], ["Orders", stats?.total_orders ?? stats?.totalOrders], ["Revenue", stats ? `₹${Number(stats.total_revenue ?? stats.totalRevenue ?? 0).toFixed(2)}` : null] ].map(([label, value]) =>
-                <article className="stat-card" key={label}><span>{label}</span><strong>{loading ? "—" : value}</strong></article>
+                <article className="stat-card" key={label}><span>{label}</span><strong>{loading ? "—" : (value ?? "—")}</strong></article>
             )}
         </section>
 
-        <section hidden={tab !== "Comics"} className="admin-panel">
-            <div className="panel-heading"><div><h2>{editingId ? "Edit comic" : "Add a new comic"}</h2><p>{editingId ? "Leave a file empty to keep the existing version." : "Both a cover image and PDF are required."}</p></div>{editingId && <button className="secondary-button" onClick={resetForm}>Cancel edit</button>}</div>
-            <form className="comic-form" onSubmit={submitComic}>
+        {tab === 'Overview' && <section className="admin-panel activity-panel"><div className="panel-heading"><h2>Recent activity</h2><button className="text-button" onClick={()=>navigateTab('Readers')}>View readers →</button></div><div className="activity-list">{activity.map(item=><button key={item.id} onClick={()=>navigateTab(item.section)}><span className="activity-icon"><AdminIcon name={item.section}/></span><span><strong>{item.title}</strong><small>{item.detail} · {new Date(item.date).toLocaleString()}</small></span><span>›</span></button>)}{!activity.length && <p>{loading ? 'Loading activity…' : sync.startsWith('Updated') ? 'Your latest reader and order activity will appear here.' : 'Waiting for a connection. Activity will refresh automatically.'}</p>}</div></section>}
+        {tab === 'More' && <section className="admin-panel more-menu">{[['Orders','Paid orders & invoices'],['Coupons','Discounts & coupon codes'],['Support','Customer support']].map(([name,description])=><button key={name} onClick={()=>navigateTab(name)}><span><strong>{name}</strong><small>{description}</small></span><span>›</span></button>)}<button onClick={logout}><span>Sign out</span><span>↗</span></button></section>}
+        <section hidden={tab !== "Comics" || !showEditor} className="admin-panel">
+            <div className="panel-heading"><div><h2>{editingId ? "Edit comic" : "Add a new comic"}</h2><p>{editingId ? "Leave a file empty to keep the existing version." : "Both a cover image and PDF are required."}</p></div>{editingId && <button className="secondary-button" onClick={()=>{resetForm();setShowEditor(false);}}>Back to comics</button>}</div>
+            {editingId && <div className="editor-preview"><img src={getCoverUrl(comics.find(c=>c.id===editingId)?.cover_image)} alt="Comic cover"/><div><h2>{form.title}</h2><span className="published-badge">● Listed in catalogue</span><p>{form.author}</p></div></div>}<div className="editor-tabs">Details</div><form className="comic-form" onSubmit={submitComic}>
                 <label>Title<input name="title" value={form.title} onChange={updateField} required /></label>
                 <label>Author<input name="author" value={form.author} onChange={updateField} required /></label>
                 <label>Genre<input name="genre" value={form.genre} onChange={updateField} required /></label>
@@ -196,7 +211,7 @@ function AdminDashboard({ onLogout } = {}) {
             </form>
         </section>
 
-        <section hidden={!["Overview", "Comics"].includes(tab)} className="admin-panel"><div className="panel-heading"><div><h2>Your comics</h2><p>{comics.length} currently listed</p></div></div>
+        <section hidden={tab !== "Comics" || showEditor} className="admin-panel"><div className="panel-heading"><div><h2>Your comics</h2><p>{comics.length} currently listed</p><button className="primary-button" onClick={()=>{resetForm();setShowEditor(true);}}>＋ Add comic</button></div></div>
             <div className="comic-admin-grid">{comics.map((comic) => <article className="admin-comic" key={comic.id}>
                 <img src={getCoverUrl(comic.cover_image || comic.cover)} alt="" />
                 <div><h3>{comic.title}</h3><p>{comic.author} · ₹{comic.price}</p><div className="comic-actions"><button className="secondary-button" onClick={() => editComic(comic)}>Edit</button><button className="danger-button" onClick={() => deleteComic(comic)}>Delete</button></div></div>
@@ -217,7 +232,7 @@ function AdminDashboard({ onLogout } = {}) {
             <div className="coupon-admin-list">{coupons.map((coupon) => <article key={coupon.id}><div><strong>{coupon.code}</strong><span>{coupon.discount_type === "percent" ? `${Number(coupon.discount_value)}% off` : `₹${Number(coupon.discount_value).toFixed(2)} off`} · used {coupon.used_count}{coupon.usage_limit ? `/${coupon.usage_limit}` : ""}</span></div><span className={coupon.active ? "coupon-live" : "coupon-off"}>{coupon.active ? "Active" : "Paused"}</span><button className="secondary-button" type="button" onClick={() => toggleCoupon(coupon.id)}>{coupon.active ? "Pause" : "Enable"}</button><button className="danger-button" type="button" onClick={() => deleteCoupon(coupon.id)}>Delete</button></article>)}{!coupons.length && <p>No coupons created yet.</p>}</div>
         </section>
 
-        <section hidden={!["Overview", "Orders"].includes(tab)} className="admin-panel"><div className="panel-heading"><div><h2>Paid orders & invoices</h2><p>Download a paid order invoice, then send it yourself.</p></div></div>
+        <section hidden={tab !== "Orders"} className="admin-panel"><div className="panel-heading"><div><h2>Paid orders & invoices</h2><p>Download a paid order invoice, then send it yourself.</p></div></div>
             {!orders.length ? <p>{loading ? "Loading paid orders…" : "No paid orders yet."}</p> : <div className="admin-users-table-wrap"><table className="admin-users-table"><thead><tr><th>Order</th><th>Customer</th><th>Comic</th><th>Paid</th><th></th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td className="user-id">#{order.id}<br /><span className="user-date">{new Date(order.purchased_at).toLocaleDateString()}</span></td><td><strong>{order.username}</strong><br /><span className="user-email">{order.email}</span></td><td>{order.title}</td><td>₹{Number(order.price).toFixed(2)}</td><td><button type="button" className="primary-button" onClick={() => downloadInvoice(order)}>Download PDF</button></td></tr>)}</tbody></table></div>}
         </section>
 
@@ -250,7 +265,7 @@ function AdminDashboard({ onLogout } = {}) {
                             {usersList.map((user) => (
                                 <tr key={user.id}>
                                     <td className="user-id">#{user.id}</td>
-                                    <td className="user-name"><strong>{user.username}</strong></td>
+                                    <td className="user-name"><button className="text-button" onClick={()=>setSelectedUser(user)}>{user.username} →</button></td>
                                     <td className="user-email">{user.email}</td>
                                     <td>
                                         <span className={`user-badge ${user.role === "admin" ? "badge-admin" : "badge-user"}`}>
@@ -267,6 +282,7 @@ function AdminDashboard({ onLogout } = {}) {
                 </div>
             )}
         </section>
+        {selectedUser && <div className="profile-overlay"><section role="dialog" aria-modal="true" aria-labelledby="profile-title" className="profile-card"><button className="text-button" autoFocus onClick={()=>setSelectedUser(null)}>← Back to users</button><header><div className="user-avatar">{selectedUser.username?.slice(0,1).toUpperCase()}</div><div><h2 id="profile-title">{selectedUser.username}</h2><span className="user-badge">{selectedUser.role}</span><p>{selectedUser.email}</p><small>Joined {selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : 'date unavailable'}</small></div></header><div className="profile-detail"><strong>Account details</strong><p>User #{selectedUser.id}</p><p>{selectedUser.email}</p></div><div className="profile-detail"><strong>Permissions</strong><p>{selectedUser.role === 'admin' ? 'Administrator access' : 'Customer access'}</p><small>Permissions are verified by the server on every request.</small></div><div className="profile-detail"><strong>Recent reading history</strong>{accessLogs.filter(l=>l.email===selectedUser.email).slice(0,5).map(l=><p key={l.id}>{l.title} · {new Date(l.accessed_at).toLocaleDateString()}</p>)}{!accessLogs.some(l=>l.email===selectedUser.email) && <p>No entries in the latest 200 reader events.</p>}</div></section></div>}
         {tab === "Support" && <AdminSupport />}
     </main>;
 }
