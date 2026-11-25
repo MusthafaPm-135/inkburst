@@ -574,4 +574,5 @@ h1,h2,h3,.display,.hero h1,.card-title { font-family:'Barlow Condensed','Arial N
 .shop-page,.detail-page { width:min(1240px,calc(100% - 28px)); }
 .nav-links { flex-wrap:nowrap; }
 @media(max-width:900px) { .nav-links { display:none; } .nav-links.active { display:flex; } }
+@media(max-width:680px) { .nav-search { display:flex; width:clamp(86px,25vw,130px); height:31px; } .nav-search button { width:29px; height:29px; } }
 
