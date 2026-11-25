@@ -495,11 +495,17 @@ h1,h2,h3,.display,.hero h1,.card-title { font-family:'Barlow Condensed','Arial N
 .home-about { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:30px; padding:23px; border:1px solid var(--kc-border); background:#fff; }
 .home-about h2 { margin:0; font-size:30px; text-transform:uppercase; }
 .home-about p:not(.eyebrow) { max-width:530px; margin:5px 0 0; color:var(--kc-muted); font-size:12px; }
-.site-footer { display:grid; grid-template-columns:2fr 1fr 1fr auto; align-items:start; gap:22px; padding:24px clamp(20px,5vw,70px); border-top:1px solid var(--kc-border); background:#f8f9fa; }
-.site-footer>div { display:grid; gap:6px; }
+.site-footer { display:grid; grid-template-columns:minmax(130px,1.4fr) minmax(180px,1fr) minmax(100px,.7fr) minmax(120px,.8fr); align-items:start; gap:22px; padding:24px clamp(20px,5vw,70px); border-top:1px solid var(--kc-border); background:#f8f9fa; }
+.site-footer>div,.footer-links { display:grid; gap:7px; }
 .site-footer b { color:#293544; font-size:10px; text-transform:uppercase; }
+.footer-social-links { display:flex; align-items:center; gap:8px; }
+.footer-social-links a { display:grid; width:32px; height:32px; place-items:center; border:1px solid #d8dee5; border-radius:50%; background:#fff; color:#344254; transition:color .16s ease,border-color .16s ease,background .16s ease,transform .16s ease; }
+.footer-social-links a:hover { transform:translateY(-2px); border-color:var(--kc-blue); background:#edf4ff; color:var(--kc-blue); }
+.footer-social-links svg { width:15px; height:15px; fill:currentColor; }
+.footer-social-links svg rect,.footer-social-links svg circle:not(.social-dot) { fill:none; stroke:currentColor; stroke-width:2; }
+.footer-social-links svg .social-dot { fill:currentColor; }
 .site-footer a:not(.brand-link) { color:#687482; font-size:10px; text-decoration:none; }
-.site-footer small { color:#87919b; font-size:9px; }
+.site-footer small { grid-column:1/-1; color:#87919b; font-size:9px; }
 .shop-page,.detail-page { width:min(1240px,100%); margin:auto; padding:22px clamp(14px,4vw,46px) 60px; }
 .shop-breadcrumb { display:flex; gap:9px; margin-bottom:18px; color:#77818c; font-size:10px; }
 .shop-breadcrumb a { color:#647181; text-decoration:none; }
