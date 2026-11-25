@@ -574,6 +574,8 @@ h1,h2,h3,.display,.hero h1,.card-title { font-family:'Barlow Condensed','Arial N
 .shop-page,.detail-page { width:min(1240px,calc(100% - 28px)); }
 .nav-links { display:flex; align-items:center; flex-wrap:nowrap; }
 .nav-links .mobile-auth-link { display:none; }
+.nav-links .nav-section-link { background:transparent!important; color:#313a46; font-family:inherit; font-weight:600; }
+.nav-links .nav-section-link:hover { background:#f4f7fa!important; color:var(--kc-blue); }
 @media(max-width:900px) { .nav-links { display:none; } .nav-links.active { display:flex; } }
 @media(max-width:680px) { .nav-search { display:flex; width:clamp(86px,25vw,130px); height:31px; } .nav-search button { width:29px; height:29px; } }
 
