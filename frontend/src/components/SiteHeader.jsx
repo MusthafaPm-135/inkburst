@@ -10,6 +10,7 @@ function SiteHeader() {
     const user = JSON.parse(localStorage.getItem("user") || "null");
     const [cartCount, setCartCount] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [query, setQuery] = useState(new URLSearchParams(location.search).get("q") || "");
 
     useEffect(() => {
         if (!user) return;
@@ -26,6 +27,11 @@ function SiteHeader() {
     };
 
     const closeMenu = () => setIsMenuOpen(false);
+    const submitSearch = (event) => {
+        event.preventDefault();
+        closeMenu();
+        navigate(query.trim() ? `/shop?q=${encodeURIComponent(query.trim())}` : "/shop");
+    };
     const goToSection = (section) => {
         closeMenu();
         if (location.pathname === "/") {
@@ -40,14 +46,15 @@ function SiteHeader() {
     <BrandMark />
 </Link>
         <div className={`nav-links ${isMenuOpen ? "active" : ""}`} id="site-navigation">
-            <button className="nav-section-link" type="button" onClick={() => goToSection("browse")}>Browse</button>
+            <Link className="nav-section-link" to="/shop" onClick={closeMenu}>Shop</Link>
             <button className="nav-section-link" type="button" onClick={() => goToSection("how")}>How it works</button>
             <button className="nav-section-link" type="button" onClick={() => goToSection("about")}>About</button>
             {!user && <><Link className="mobile-auth-link" to="/login" onClick={closeMenu}>Log in</Link><Link className="mobile-auth-link mobile-signup-link" to="/register" onClick={closeMenu}>Sign up</Link></>}
             {user && <button className="nav-section-link mobile-auth-link" type="button" onClick={logout}>Log out</button>}
+            {user?.role === "admin" && <Link className="admin-nav-link" to="/admin" onClick={closeMenu}>Admin</Link>}
         </div>
         <div className="nav-actions">
-            
+<form className="nav-search" onSubmit={submitSearch}><input aria-label="Search comics" placeholder="Search comics" value={query} onChange={(event) => setQuery(event.target.value)} /><button aria-label="Submit search">⌕</button></form>
 
 {user ? (
     <>
@@ -79,3 +86,4 @@ function SiteHeader() {
 }
 
 export default SiteHeader;
+

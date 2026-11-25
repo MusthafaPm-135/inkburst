@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import API, { API_ORIGIN } from "../api/axios";
 
 function ComicCard({ comic }) {
@@ -42,21 +42,22 @@ function ComicCard({ comic }) {
 
     return (
 
-        <div className="card">
+        <article className="card">
 
-            <img
+            <Link className="comic-cover-link" to={`/comics/${comic.id}`} aria-label={`View ${comic.title}`}><img
                 className="comic-cover"
                 src={getCoverUrl(comic)}
                 alt={comic.title}
                 onError={showCoverFallback}
-            />
+            /></Link>
 
-            <div className="card-body"><span className="card-genre">{comic.genre || "Comic"} · ISSUE #{String(comic.id).padStart(3, "0")}</span><h3 className="card-title">{comic.title}</h3><p className="card-author">by {comic.author}</p><p className="card-desc">{comic.description || "A digital comic for your library."}</p><div className="card-foot"><span className="price">₹{Number(comic.price).toFixed(2)}</span><button className="add-btn" onClick={buyNow}>Add to cart</button></div></div>
+            <div className="card-body"><span className="card-genre">{comic.genre || "Comic"} · ISSUE #{String(comic.id).padStart(3, "0")}</span><h3 className="card-title"><Link to={`/comics/${comic.id}`}>{comic.title}</Link></h3><p className="card-author">by {comic.author || "Keyra Comics"}</p><p className="card-desc">{comic.description || "A digital comic for your library."}</p><div className="card-foot"><span className="price">₹{Number(comic.price).toFixed(2)}</span><button className="add-btn" onClick={buyNow}>Add to cart</button></div></div>
 
-        </div>
+        </article>
 
     );
 
 }
 
 export default ComicCard;
+

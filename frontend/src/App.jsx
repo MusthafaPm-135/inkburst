@@ -14,6 +14,8 @@ import GoogleCallback from "./pages/GoogleCallback";
 import CustomerCare from "./components/CustomerCare";
 import TawkTo, { isTawkConfigured } from "./components/TawkTo";
 import ReaderPortal from "./pages/ReaderPortal";
+import ShopPage from "./pages/ShopPage";
+import ComicDetail from "./pages/ComicDetail";
 import "./styles/KeyraNext.css";
 import "./styles/ComicCrater.css";
 
@@ -23,6 +25,8 @@ function App() {
             <Routes>
 
                 <Route path="/" element={<Home />} />
+                <Route path="/shop" element={<ShopPage />} />
+                <Route path="/comics/:comicId" element={<ComicDetail />} />
 
                 <Route path="/login" element={<Login />} />
 
