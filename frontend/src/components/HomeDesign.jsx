@@ -1,217 +1,34 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import SiteHeader from "../components/SiteHeader";
-import BrandMark from "../components/BrandMark";
-import ComicCard from "../components/ComicCard";
+import { Link } from "react-router-dom";
+import SiteHeader from "./SiteHeader";
+import BrandMark from "./BrandMark";
+import ComicCard from "./ComicCard";
 import { getComics } from "../api/comics";
 import { API_ORIGIN } from "../api/axios";
-import "../styles/Home.css";
-import "../styles/StorefrontRefresh.css";
 
-function HomeDesign() {
-    const location = useLocation();
-    const [comics, setComics] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [downloadingApp, setDownloadingApp] = useState(false);
-    const readerAppUrl = "https://expo.dev/artifacts/eas/Ht0pBERQQMQ_D1VrouR7KZZ7ld0rWEB9kloRAweDC4I.apk";
-    const featuredComic = comics[0];
-    const normalizedQuery = searchQuery.trim().toLowerCase();
-    const matchingComics = comics.filter((comic) => [comic.title, comic.author, comic.genre, comic.description].filter(Boolean).some((value) => value.toLowerCase().includes(normalizedQuery)));
-
-    const getCoverUrl = (comic) => {
-        const cover = comic?.cover_image || comic?.cover;
-        if (!cover) return "";
-        if (/^(https?:|data:)/.test(cover)) return cover;
-        return cover.startsWith("/") ? `${API_ORIGIN}${cover}` : `${API_ORIGIN}/uploads/covers/${cover}`;
-    };
-
-    const downloadReaderApp = async (event) => {
-        event.preventDefault();
-        if (downloadingApp) return;
-
-        setDownloadingApp(true);
-        try {
-            const response = await fetch(readerAppUrl);
-            if (!response.ok) throw new Error("Download unavailable");
-
-            const appFile = await response.blob();
-            const fileUrl = URL.createObjectURL(appFile);
-            const link = document.createElement("a");
-            link.href = fileUrl;
-            link.download = "KeyraReader.apk";
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(fileUrl);
-        } catch {
-            window.location.assign(readerAppUrl);
-        } finally {
-            setDownloadingApp(false);
-        }
-    };
-
-    useEffect(() => {
-        getComics()
-            .then((data) => setComics(data || []))
-            .catch((err) => console.error("Error fetching comics:", err))
-            .finally(() => setLoading(false));
-    }, []);
-
-    useEffect(() => {
-        const sectionId = location.hash.slice(1);
-        if (!sectionId) return;
-
-        requestAnimationFrame(() => {
-            document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
-        });
-    }, [location.hash]);
-
-    return (
-        <>
-        <SiteHeader />
-<section className="hero" id="top">
-    <div className="hero-content">
-        <div className="hero-eyebrow mono">Original stories. Instant access.</div>
-        <h1>READ BOLD.<br />OWN DIGITAL.</h1>
-        <p className="hero-copy-box permanent-light-box">Digital-only comics from independent creators — delivered instantly, readable anywhere, and never out of print.</p>
-        <div className="hero-actions">
-            <button className="btn-primary" onClick={() => document.getElementById("browse").scrollIntoView({ behavior: "smooth" })}>Explore Comics</button>
-            <button className="btn-ghost" onClick={() => document.getElementById("how").scrollIntoView({ behavior: "smooth" })}>How It Works</button>
-        </div>
-        <div className="hero-proof mono"><span>⚡ INSTANT DELIVERY</span><span>🔒 SECURE PAYMENT</span><span>∞ YOUR LIBRARY</span></div>
-    </div>
-    <div className="hero-showcase">
-        <div className="burst"><span>DIGITAL<br />ORIGINALS</span></div>
-        <div className="featured-issue">
-            {featuredComic && getCoverUrl(featuredComic) ? <img src={getCoverUrl(featuredComic)} alt="" /> : <div className="featured-placeholder"><span className="mono">KEYRA ORIGINAL</span><strong>NEW WORLDS<br />LIVE HERE.</strong><small className="mono">ISSUE #001</small></div>}
-        </div>
-        <div className="featured-caption"><span className="mono">FEATURED DROP</span><strong>{featuredComic?.title || "THE FIRST WAVE"}</strong><small>{featuredComic ? `by ${featuredComic.author}` : "KeyraComics Originals"}</small></div>
-    </div>
-</section>
-<div className="reader-promise" aria-label="KeyraComics benefits"><span><strong>BUY ONCE</strong><small>No subscription needed</small></span><span><strong>READ ANYWHERE</strong><small>Phone, tablet, or desktop</small></span><span><strong>KEEP YOUR SHELF</strong><small>Purchases stay in Library</small></span><span><strong>BACK NEW VOICES</strong><small>Independent creator stories</small></span></div>
-<section className="reader-app-promo" aria-labelledby="reader-app-title">
-    <div className="reader-app-stamp mono">NOW ON ANDROID</div>
-    <div className="reader-app-copy">
-        <p className="eyebrow mono">TAKE YOUR LIBRARY WITH YOU</p>
-        <h2 id="reader-app-title">THE KEYRA<br />READER APP</h2>
-        <p>
-            Buy your comics here, then sign in to the Keyra Reader App to keep
-            every purchased issue in one personal library.
-        </p>
-    </div>
-    <div className="reader-app-actions">
-        <a
-            className="reader-app-button"
-            href={readerAppUrl}
-            onClick={downloadReaderApp}
-        >
-            {downloadingApp ? "Preparing download…" : "Download Reader App"} <span aria-hidden="true">↓</span>
-        </a>
-        <a className="reader-app-web-link" href="/reader">Use on desktop →</a>
-    </div>
-</section>
-<section
-    className="section"
-    id="browse"
->
-
-    <div className="section-head storefront-section-head">
-        <div><p className="mono section-kicker">FIND YOUR NEXT FIX</p><h2>Browse the Stack</h2></div>
-        <p>{loading ? "Opening the vault…" : normalizedQuery ? `${matchingComics.length} result${matchingComics.length === 1 ? "" : "s"} for “${searchQuery.trim()}”` : `${comics.length} digital release${comics.length === 1 ? "" : "s"} ready to discover`}</p>
-    </div>
-
-    <div className="catalogue-search">
-        <label htmlFor="comic-search"><span aria-hidden="true">⌕</span><input id="comic-search" type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search comics, creators, or genres" /></label>
-        {searchQuery && <button type="button" onClick={() => setSearchQuery("")}>Clear</button>}
-    </div>
-
-    {loading ? (
-        <p className="mono" style={{ textAlign: "center", padding: "40px 0" }}>Loading comics...</p>
-    ) : matchingComics.length > 0 ? (
-        <div className="grid">
-            {matchingComics.map((comic) => (
-                <ComicCard key={comic.id} comic={comic} />
-            ))}
-        </div>
-    ) : normalizedQuery ? (
-        <section className="catalogue-no-results"><strong>No comics found.</strong><span>Try a different title, creator, or genre.</span></section>
-    ) : (
-        <section className="coming-soon" aria-labelledby="coming-soon-title">
-            <div className="coming-soon-burst" aria-hidden="true">POW!</div>
-            <p className="coming-soon-kicker mono">ISSUE #001 IS IN THE WORKS</p>
-            <h3 id="coming-soon-title">New worlds are<br />coming soon.</h3>
-            <p>Our first original stories are being drawn, inked, and lettered. Join us when the first panels hit the shelf.</p>
-            <span className="coming-soon-stamp mono">STAY TUNED</span>
-        </section>
-    )}
-
-</section>
-<section className="section" id="how">
-
-    <div className="section-head">
-        <h2>How It Works</h2>
-    </div>
-
-    <div className="steps">
-
-        <div className="step">
-            <div className="num mono">01</div>
-            <h3>Choose a Comic</h3>
-            <p>
-                Browse hundreds of premium comics and select your favourite.
-            </p>
-        </div>
-
-        <div className="step">
-            <div className="num mono">02</div>
-            <h3>Secure Checkout</h3>
-            <p>
-                Login and pay securely using Razorpay, UPI, Cards or Net Banking.
-            </p>
-        </div>
-
-        <div className="step">
-            <div className="num mono">03</div>
-            <h3>Read Forever</h3>
-            <p>
-                Purchased comics instantly appear in your Library where you can
-                download them anytime.
-            </p>
-        </div>
-
-    </div>
-
-</section>
-<section className="section about-section" id="about">
-    <div className="section-head">
-        <h2>About Keyra Comics</h2>
-    </div>
-    <div className="about-grid">
-        <div className="about-copy">
-            <p className="eyebrow mono">STORIES WITHOUT THE WAIT</p>
-            <h3>Independent comics, always within reach.</h3>
-            <p>Keyra Comics is a digital shelf for readers who love bold art, big ideas, and the feeling of discovering a new favourite issue.</p>
-            <p>Every comic is delivered digitally, so you can build your library, return to your purchases, and keep reading wherever you are.</p>
-        </div>
-        <div className="about-points">
-            <div><strong>Digital-first</strong><span>No shipping. No paper. Just panels.</span></div>
-            <div><strong>Reader-owned</strong><span>Purchased comics stay in your library.</span></div>
-            <div><strong>Creator-led</strong><span>A home for memorable independent stories.</span></div>
-        </div>
-    </div>
-</section>
-<footer>
-
-    <a href="/" className="logo brand-link"><BrandMark /></a>
-
-    <div className="mono">
-        © 2026 Keyra Digital Comics
-    </div>
-
-</footer>
-        </>
-    );
+function getCoverUrl(comic) {
+    const cover = comic?.cover_image || comic?.cover;
+    if (!cover) return "";
+    if (/^(https?:|data:)/.test(cover)) return cover;
+    return cover.startsWith("/") ? `${API_ORIGIN}${cover}` : `${API_ORIGIN}/uploads/covers/${cover}`;
 }
 
-export default HomeDesign;
+export default function HomeDesign() {
+    const [comics, setComics] = useState([]);
+    const [loading, setLoading] = useState(true);
+    useEffect(() => { getComics().then(setComics).finally(() => setLoading(false)); }, []);
+    const featured = comics[0];
+    return <><SiteHeader/><main className="home-page">
+        <section className="home-hero"><div className="home-hero-copy"><p className="eyebrow">KEYRACOMICS · DIGITAL COMIC SHOP</p><h1>{featured?"THIS WEEK’S TOP DROPS":"YOUR NEXT FAVORITE STORY"}</h1><p>{featured?`Discover ${featured.title} and the latest releases.`:"Explore independent stories, collect your favorites, and read anywhere."}</p><div className="home-hero-actions"><Link to="/shop" className="store-button">Shop comics</Link><Link to="/reader" className="button-outline">Reader app</Link></div></div>{featured?<Link className="hero-feature-cover" to={`/comics/${featured.id}`}><img src={getCoverUrl(featured)} alt={`${featured.title} cover`}/><span>FEATURED ISSUE</span></Link>:<div className="hero-placeholder"><span>KEYRA ORIGINALS</span><strong>NEW WORLDS<br/>COMING SOON</strong><small>YOUR DIGITAL SHELF STARTS HERE</small></div>}</section>
+        <section className="home-section" id="arrivals"><div className="home-section-heading"><div><p className="eyebrow">JUST ADDED TO THE SHELF</p><h2>New arrivals</h2></div><Link to="/shop">View all →</Link></div>{loading?<p className="shop-empty">Opening the vault…</p>:comics.length?<div className="grid home-product-grid">{comics.slice(0,4).map(comic=><ComicCard key={comic.id} comic={comic}/>)}</div>:<div className="home-empty"><strong>First issues are on the way.</strong><span>Our shelves will fill with original comics soon.</span></div>}</section>
+        <section className="reader-banner"><div className="reader-banner-badge">KEYRA<br/>READER</div><div><p className="eyebrow">YOUR LIBRARY, EVERYWHERE</p><h2>Keep your comics close.</h2><p>Read purchased issues in your Keyra Reader app on Android or desktop.</p></div><div className="reader-banner-actions"><a href="https://expo.dev/artifacts/eas/Ht0pBERQQMQ_D1VrouR7KZZ7ld0rWEB9kloRAweDC4I.apk" download className="store-button">Download app ↓</a><Link to="/reader">Open reader →</Link></div></section>
+        <section className="home-section home-story" id="how"><div className="home-section-heading"><div><p className="eyebrow">A SIMPLE WAY TO READ</p><h2>Latest from Keyra</h2></div></div><div className="home-feature-tiles"><article><span>01 · DISCOVER</span><h3>Find your next world.</h3><p>Browse our live catalog and explore stories by title, creator, or genre.</p><Link to="/shop">Explore the shop →</Link></article><article><span>02 · COLLECT</span><h3>Your shelf, yours to keep.</h3><p>Buy a digital issue once and keep it available in your Keyra library.</p><Link to="/login">Visit your library →</Link></article><article><span>03 · READ</span><h3>Pick up anywhere.</h3><p>Use the Keyra Reader app to continue reading on your device.</p><Link to="/reader">Meet the reader →</Link></article></div></section>
+        <section className="home-about" id="about"><div><p className="eyebrow">ABOUT THE CRATER</p><h2>Stories worth keeping.</h2><p>KeyraComics is a digital shelf for independent comic stories and the readers who love them.</p></div><Link to="/shop" className="button-outline">Explore the shop</Link></section>
+    </main><footer className="site-footer"><Link to="/" className="logo brand-link"><BrandMark/></Link><div className="footer-social"><b>Social us</b><div className="footer-social-links">
+        <a href="https://www.instagram.com/keyracomics" target="_blank" rel="noreferrer" aria-label="KeyraComics on Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle className="social-dot" cx="18" cy="6" r="1"/></svg></a>
+        <a href="https://x.com/keyracomics" target="_blank" rel="noreferrer" aria-label="KeyraComics on X" title="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.9 3H22l-6.8 7.8L23.2 21h-6.3L12 14.7 6.5 21H3.4l7.3-8.4L2.9 3h6.5l4.5 5.9L18.9 3Zm-1.1 16h1.7L8.4 4.9H6.6L17.8 19Z"/></svg></a>
+        <a href="https://www.youtube.com/@keyracomics" target="_blank" rel="noreferrer" aria-label="KeyraComics on YouTube" title="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z"/></svg></a>
+        <a href="https://www.facebook.com/keyracomics" target="_blank" rel="noreferrer" aria-label="KeyraComics on Facebook" title="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.6 21v-8.2h2.8l.4-3.2h-3.2v-2c0-.9.3-1.6 1.6-1.6H17V3.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.4v2.2H7.5v3.2h2.8V21h3.3Z"/></svg></a>
+    </div></div><div className="footer-links"><b>Explore</b><Link to="/shop">Shop comics</Link><Link to="/reader">Reader app</Link></div><div className="footer-links"><b>Your account</b><Link to="/library">Library</Link><Link to="/cart">Cart</Link></div><small>© 2026 Keyra Digital Comics</small></footer></>;
+}
+

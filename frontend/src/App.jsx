@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -6,13 +6,18 @@ import Register from "./pages/Register";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Library from "./pages/Library";
+import AdminDashboard from "./pages/AdminDashboard";
 import GoogleAuthCallback from "./pages/GoogleAuthCallback";
+import AdminRoute from "./components/AdminRoute";
 import RequireAuth from "./components/RequireAuth";
 import GoogleCallback from "./pages/GoogleCallback";
 import CustomerCare from "./components/CustomerCare";
 import TawkTo, { isTawkConfigured } from "./components/TawkTo";
 import ReaderPortal from "./pages/ReaderPortal";
+import ShopPage from "./pages/ShopPage";
+import ComicDetail from "./pages/ComicDetail";
 import "./styles/KeyraNext.css";
+import "./styles/ComicCrater.css";
 
 function App() {
     return (
@@ -20,6 +25,8 @@ function App() {
             <Routes>
 
                 <Route path="/" element={<Home />} />
+                <Route path="/shop" element={<ShopPage />} />
+                <Route path="/comics/:comicId" element={<ComicDetail />} />
 
                 <Route path="/login" element={<Login />} />
 
@@ -40,9 +47,9 @@ function App() {
                     <Route path="/library" element={<Library />} />
                 </Route>
 
-                <Route path="/admin/*" element={<Navigate to="/" replace />} />
-                <Route path="/control/*" element={<Navigate to="/" replace />} />
-                <Route path="/admin.html" element={<Navigate to="/" replace />} />
+                <Route element={<AdminRoute />}>
+                    <Route path="/admin" element={<AdminDashboard />} />
+                </Route>
 
             </Routes>
             {isTawkConfigured ? <TawkTo /> : <CustomerCare />}
@@ -51,3 +58,4 @@ function App() {
 }
 
 export default App;
+
