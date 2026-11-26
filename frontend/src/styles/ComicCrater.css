@@ -585,3 +585,54 @@ h1,h2,h3,.display,.hero h1,.card-title { font-family:'Barlow Condensed','Arial N
 @media(max-width:900px) { .nav-links { display:none; } .nav-links.active { display:flex; } }
 @media(max-width:680px) { .nav-search { display:flex; width:clamp(86px,25vw,130px); height:31px; } .nav-search button { width:29px; height:29px; } }
 
+
+/* Responsive navigation fixes */
+@media (max-width: 900px) {
+    .nav { position: sticky; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+    .nav-links {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 14px;
+        left: auto;
+        z-index: 60;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 3px;
+        width: min(300px, calc(100vw - 28px));
+        max-height: calc(100dvh - 90px);
+        overflow-y: auto;
+        padding: 8px;
+        border: 1px solid var(--kc-border);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: var(--kc-shadow);
+    }
+    .nav-links.active { display: flex; }
+    .nav-links > * {
+        box-sizing: border-box;
+        display: flex;
+        width: 100%;
+        min-height: 42px;
+        align-items: center;
+        padding: 10px 12px;
+        border-radius: 6px;
+        text-align: left;
+        white-space: normal;
+    }
+    .nav-links .mobile-auth-link { display: flex; }
+    .nav-links .mobile-signup-link { background: var(--kc-blue); color: #fff; }
+    .nav-links .mobile-signup-link:hover { background: var(--kc-blue-dark); color: #fff; }
+    .nav-actions > .auth-link, .nav-actions > .signup-link { display: none; }
+    .nav-search { width: clamp(110px, 24vw, 190px); }
+}
+@media (max-width: 680px) {
+    .nav { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 8px 12px; }
+    .nav .brand-mark-logo { max-width: 106px; }
+    .nav-actions { min-width: 0; gap: 6px; }
+    .nav-search { display: none; }
+    .cart-btn { min-height: 38px; padding: 7px 9px; }
+    .cart-btn > span:nth-child(2) { display: none; }
+    .hamburger-btn { display: grid; width: 40px; height: 40px; place-items: center; }
+}
