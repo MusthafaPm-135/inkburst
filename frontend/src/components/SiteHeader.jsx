@@ -1,11 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import API from "../api/axios";
 import BrandMark from "./BrandMark";
 import { closeTawkChat } from "./TawkTo";
 
 function SiteHeader() {
     const navigate = useNavigate();
+    const navRef = useRef(null);
     const location = useLocation();
     const user = JSON.parse(localStorage.getItem("user") || "null");
     const [cartCount, setCartCount] = useState(0);
@@ -26,6 +27,20 @@ function SiteHeader() {
         navigate("/");
     };
 
+    useEffect(() => {
+        if (!isMenuOpen) return;
+        const handleKeyDown = (event) => { if (event.key === "Escape") closeMenu(); };
+        const handlePointerDown = (event) => { if (!navRef.current?.contains(event.target)) closeMenu(); };
+        document.addEventListener("keydown", handleKeyDown);
+        document.addEventListener("pointerdown", handlePointerDown);
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            document.removeEventListener("pointerdown", handlePointerDown);
+        };
+    }, [isMenuOpen]);
+
+    useEffect(() => { closeMenu(); }, [location.pathname, location.search]);
+
     const closeMenu = () => setIsMenuOpen(false);
     const submitSearch = (event) => {
         event.preventDefault();
@@ -41,7 +56,7 @@ function SiteHeader() {
         navigate(`/#${section}`);
     };
 
-    return <nav className="nav">
+    return <nav className="nav" ref={navRef}>
         <Link to="/" className="logo brand-link">
     <BrandMark />
 </Link>
